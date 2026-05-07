@@ -1,0 +1,110 @@
+FILE: C:\Users\ljaljimi\OneDrive - KARL STORZ Endoskope\.dokumenteUniversitetiKadriZeka\Master_thesis\Sistemi_i_Menaxhimi_te_Depove\dokumentimi\Smd – Faza 2_ Bazat E Core Wms.docx
+PARAGRAPHS: 82 TABLES: 0 WORDS_APPROX: 391
+
+HEADINGS:
+- FAZA 2 – Bazat e SMD (Core WMS)
+- Qëllimi i FAZËS 2
+- Struktura e FAZËS 2 (Roadmap)
+- HAPI 2.1 – Warehouses (Depo)
+- Përshkrim Biznesi
+- Funksionalitetet
+- Atributet Kryesore
+- HAPI 2.2 – Locations (Struktura e Brendshme e Depos)
+- Modeli Hierarkik
+- Përfitimet
+- Çfarë implementohet
+- HAPI 2.3 – Products
+- Përshkrim Biznesi
+- Atributet Kryesore
+- HAPI 2.4 – Stock (Inventory)
+- Përshkrim
+- Çfarë mbështetet
+- HAPI 2.5 – Lëvizjet e Stokut (Stock Movements)
+- Llojet
+- Përfitimi
+- Siguria në FAZËN 2
+- Output i FAZËS 2
+- Lidhja me FAZAT e Ardhshme
+- Status
+
+FIRST_PARAGRAPHS:
+[0] (Heading 1) FAZA 2 – Bazat e SMD (Core WMS)
+[1] (First Paragraph) FAZA 2 ndërton vlerën reale operacionale të Sistemit të Menaxhimit të Depove (SMD). Në këtë fazë, sistemi kalon nga “foundation & security” në menaxhim real të depos, lokacioneve, produkteve dhe stokut.
+[3] (Heading 2) Qëllimi i FAZËS 2
+[4] (Compact) Modelim real i depos dhe strukturës së saj
+[5] (Compact) Menaxhim i produkteve dhe sasive
+[6] (Compact) Gjurmim i lëvizjeve të stokut
+[7] (Compact) API të sigurta dhe të gatshme për frontend
+[8] (First Paragraph) FAZA 2 është zemra funksionale e WMS.
+[10] (Heading 2) Struktura e FAZËS 2 (Roadmap)
+[11] (Compact) Warehouses (Depo)
+[12] (Compact) Locations (Zones → Racks → Bins)
+[13] (Compact) Products
+[14] (Compact) Stock (Inventory)
+[15] (Compact) Stock Movements (IN / OUT / TRANSFER)
+[16] (First Paragraph) Çdo hap ndërtohet mbi tjetrin.
+[18] (Heading 2) HAPI 2.1 – Warehouses (Depo)
+[19] (Heading 3) Përshkrim Biznesi
+[20] (First Paragraph) Warehouse përfaqëson një depo fizike ku ruhen produktet. Një sistem mund të ketë një ose më shumë depo.
+[21] (Heading 3) Funksionalitetet
+[22] (Compact) Krijim depoje
+[23] (Compact) Aktivizim / çaktivizim
+[24] (Compact) Lexim liste deporesh
+[25] (Heading 3) Atributet Kryesore
+[26] (Compact) Kodi i depos
+[27] (Compact) Emri
+[28] (Compact) Adresa
+[29] (Compact) Statusi aktiv
+[30] (First Paragraph) Warehouse është entiteti prind për lokacionet, produktet dhe stokun.
+[32] (Heading 2) HAPI 2.2 – Locations (Struktura e Brendshme e Depos)
+[33] (Heading 3) Modeli Hierarkik
+[34] (First Paragraph) Warehouse → Zone → Rack → Bin
+[35] (Body Text) Ky model pasqyron organizimin real të një depoje.
+[36] (Heading 3) Përfitimet
+[37] (Compact) Saktësi në lokacion
+[38] (Compact) Picking më i shpejtë
+[39] (Compact) Gjurmim i lëvizjeve
+[40] (Heading 3) Çfarë implementohet
+[41] (Compact) Zones brenda warehouse-it
+[42] (Compact) Racks brenda zone-s
+[43] (Compact) Bins si lokacion minimal
+[45] (Heading 2) HAPI 2.3 – Products
+[46] (Heading 3) Përshkrim Biznesi
+[47] (First Paragraph) Product përfaqëson artikullin që ruhet dhe lëviz në depo.
+[48] (Heading 3) Atributet Kryesore
+[49] (Compact) Kod / SKU
+[50] (Compact) Emër
+[51] (Compact) Barcode (opsional)
+[52] (Compact) Status aktiv
+[53] (First Paragraph) Produkti është i pavarur nga warehouse, por stok-u lidhet me të dy.
+[55] (Heading 2) HAPI 2.4 – Stock (Inventory)
+[56] (Heading 3) Përshkrim
+[57] (First Paragraph) Stock përfaqëson sasinë reale të një produkti në një lokacion të caktuar.
+[58] (Heading 3) Çfarë mbështetet
+[59] (Compact) Sasi aktuale
+[60] (Compact) Sasi e rezervuar
+[61] (Compact) Warehouse + Bin
+[62] (First Paragraph) Ky modul siguron pasqyrë reale të gjendjes.
+[64] (Heading 2) HAPI 2.5 – Lëvizjet e Stokut (Stock Movements)
+[65] (Heading 3) Llojet
+[66] (Compact) IN (Pranim)
+[67] (Compact) OUT (Dalje)
+[68] (Compact) TRANSFER (Transfer brenda depos)
+[69] (Heading 3) Përfitimi
+[70] (Compact) Audit trail
+[71] (Compact) Historik i plotë i lëvizjeve
+[72] (Compact) Kontroll i gabimeve
+[74] (Heading 2) Siguria në FAZËN 2
+[75] (Compact) Të gjitha endpoint-et janë të mbrojtura me JWT
+[76] (Compact) Role-based access (FAZA 3 do e zgjerojë)
+[78] (Heading 2) Output i FAZËS 2
+[79] (First Paragraph) Pas përfundimit të FAZËS 2, sistemi do të ketë:
+[80] (Compact) Strukture reale depoje
+[81] (Compact) Menaxhim produktesh
+[82] (Compact) Gjendje reale stoku
+[83] (Compact) API gati për frontend
+[85] (Heading 2) Lidhja me FAZAT e Ardhshme
+[86] (Compact) FAZA 3: Role, Permissions, Reports
+[87] (Compact) FAZA 4: Frontend (Dashboard, UI)
+[88] (Compact) FAZA 5: Integrime (ERP, Mobile, Barcode)
+[90] (Heading 2) Status

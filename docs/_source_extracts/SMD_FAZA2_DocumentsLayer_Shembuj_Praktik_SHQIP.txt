@@ -1,0 +1,62 @@
+FILE: C:\Users\ljaljimi\OneDrive - KARL STORZ Endoskope\.dokumenteUniversitetiKadriZeka\Master_thesis\Sistemi_i_Menaxhimi_te_Depove\dokumentimi\SMD_FAZA2_DocumentsLayer_Shembuj_Praktik_SHQIP.docx
+PARAGRAPHS: 56 TABLES: 0 WORDS_APPROX: 536
+
+HEADINGS:
+
+FIRST_PARAGRAPHS:
+[0] (Normal) SMD (Sistemi i Menaxhimit te Depove) Documents Layer – Shembuj praktik (Inbound/Outbound)
+[1] (Normal) Version: 1.0 | Data: 12.01.2026
+[3] (Normal) 1. Qellimi i Documents Layer
+[4] (Normal) Documents Layer eshte menyra zyrtare se si SMD regjistron hyrjet dhe daljet e mallrave ne depo. Dokumentet krijohen fillimisht si Draft dhe vetem me veprimin Confirm ndikojne ne stok (Inventory) dhe gjenerojne audit trail (Stock Movements).
+[5] (Normal) 2. Perfitimet kryesore per biznesin
+[6] (List Bullet) Kontroll i procesit: stoku nuk ndryshon pa dokument te konfirmuar.
+[7] (List Bullet) Gjurmueshmeri (Audit Trail): kush, kur, cfare produkti, sa sasi dhe ne cilin lokacion (Bin).
+[8] (List Bullet) Parandalim gabimesh: nuk lejohet dalje mbi sasi te disponueshme; nuk lejohet Confirm pa linja.
+[9] (List Bullet) Praktike enterprise: e ngjashme me sistemet SAP/Odoo/Dynamics (Draft → Confirmed).
+[10] (List Bullet) Pergatitje per raporte dhe eksport (PDF/Excel/CSV) me te dhena te strukturuara.
+[11] (Normal) 3. Si funksionon procesi (ne terma te thjeshte)
+[12] (Normal) Cdo dokument kalon ne keto hapa:
+[13] (List Number) Krijohet dokumenti si Draft (me Reference p.sh. PO-1001 ose SO-2001).
+[14] (List Number) Shtohen linjat (Product + Quantity + Bin).
+[15] (List Number) Behet Confirm: sistemi perditeson Inventory dhe regjistron Stock Movement.
+[16] (List Number) Dokumenti behet Confirmed dhe nuk lejon me editim (sipas rregullave).
+[17] (Normal) 4. Shembuj praktik (gati per prezantim)
+[18] (Normal) Shembulli A – Pranim malli (Inbound / Goods Receipt)
+[19] (Normal) Situata: Furnitori sjell 100 cope te produktit SKU-0001 (p.sh. 'Karton 10x'). Malli vendoset ne lokacionin BIN-A ne depo WH-001.
+[20] (Normal) Hapat ne SMD:
+[21] (List Number) Operatori krijon dokument Inbound (Draft) me Reference: PO-1001.
+[22] (List Number) Shton nje linje: Produkt = SKU-0001, Sasi = 100, ToBin = BIN-A.
+[23] (List Number) Shtyp Confirm.
+[24] (Normal) Rezultati pas Confirm:
+[25] (List Bullet) Inventory per SKU-0001 ne BIN-A rritet me +100 (QtyOnHand).
+[26] (List Bullet) Krijohet nje rresht ne historik: StockMovement = IN (me Reference PO-1001).
+[27] (List Bullet) Dokumenti kalon ne status Confirmed dhe ruhet si prove per audit.
+[28] (Normal) Shembulli B – Dergese te klienti (Outbound / Shipment)
+[29] (Normal) Situata: Klienti porosit 20 cope SKU-0001. Malli merret nga BIN-A.
+[30] (Normal) Hapat ne SMD:
+[31] (List Number) Krijohet dokument Outbound (Draft) me Reference: SO-2001.
+[32] (List Number) Shtohet linje: Produkt = SKU-0001, Sasi = 20, FromBin = BIN-A.
+[33] (List Number) Shtypet Confirm.
+[34] (Normal) Rezultati pas Confirm:
+[35] (List Bullet) Inventory per SKU-0001 ne BIN-A ulet me -20 (QtyOnHand).
+[36] (List Bullet) Krijohet StockMovement = OUT (me Reference SO-2001).
+[37] (List Bullet) Dokumenti kalon ne Confirmed dhe mbetet si gjurme e daljes.
+[38] (Normal) Shembulli C – Relokim brenda depos (Transfer)
+[39] (Normal) Situata: Per optimizim picking, 30 cope SKU-0001 levizen nga BIN-A ne BIN-B.
+[40] (Normal) Rezultati:
+[41] (List Bullet) BIN-A ulet me -30 dhe BIN-B rritet me +30 (ne te njejtin transaksion).
+[42] (List Bullet) Historiku ruan Transfer (FromBin → ToBin) me sasi dhe kohe.
+[43] (List Bullet) Sistemi nuk lejon transfer qe e con stokun nen 0 ose qe thyen rezervimet.
+[44] (Normal) 5. Kontrollet praktike (rregulla qe parandalojne gabime)
+[45] (List Bullet) Confirm pa linja nuk lejohet.
+[46] (List Bullet) Dalje (Outbound) mbi sasine e disponueshme nuk lejohet.
+[47] (List Bullet) Confirm eshte i sigurt nese shtypet dy here: nuk dyfishon stokun (idempotent).
+[48] (List Bullet) Produktet dhe lokacionet qe perdoren ne dokumente nuk fshihen rastesisht (Restrict).
+[49] (List Bullet) Cdo levizje regjistrohet me kohe, reference dhe perdorues (audit trail).
+[50] (Normal) 6. Cfare fiton klienti pas kesaj faze
+[51] (Normal) Klienti ka nje proces te qarte operativ per pranim dhe dergese, me gjendje reale te stokut sipas lokacioneve dhe historik te plote te levizjeve. Kjo krijon besueshmeri ne shifra dhe lehteson raportimin.
+[52] (Normal) 7. Hapat e ardhshem (per kontrate / milestones)
+[53] (List Bullet) FAZA 3 – Control & Business Layer: Roles/Permissions (Admin/Manager/Worker) dhe audit logs per veprime.
+[54] (List Bullet) Raporte dhe eksport: Stock by Warehouse, Stock by Product, Movements History (PDF/Excel/CSV).
+[55] (List Bullet) FAZA 4 – Frontend: Dashboard dhe UI per operatoret (me workflow Draft → Confirm).
+[57] (Normal) — Fund —

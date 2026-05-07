@@ -1,0 +1,63 @@
+FILE: C:\Users\ljaljimi\OneDrive - KARL STORZ Endoskope\.dokumenteUniversitetiKadriZeka\Master_thesis\Sistemi_i_Menaxhimi_te_Depove\dokumentimi\Smd – Faza 2_ Warehouses.docx
+PARAGRAPHS: 42 TABLES: 0 WORDS_APPROX: 440
+
+HEADINGS:
+- FAZA 2 – CORE WMS (SMD)
+- HAPI 1: Warehouses (Depo)
+- 1️⃣ Domain Layer – Entity Warehouse
+- 2️⃣ Infrastructure – DbContext
+- 3️⃣ Migration & Database
+- Krijo migration:
+- Apliko në DB:
+- 4️⃣ Application Layer – DTOs
+- CreateWarehouseDto.cs
+- WarehouseDto.cs
+- 5️⃣ API Layer – WarehousesController
+- 6️⃣ Test në Swagger
+- ✅ Çfarë kemi ndërtuar deri tani
+- ⏭️ HAPI I ARDHSHËM – FAZA 2
+- HAPI 2: Locations
+
+FIRST_PARAGRAPHS:
+[0] (Heading 1) FAZA 2 – CORE WMS (SMD)
+[1] (Heading 2) HAPI 1: Warehouses (Depo)
+[2] (First Paragraph) Ky hap ndërton bazën e sistemit të menaxhimit të depos. Çdo WMS fillon me Warehouse, sepse të gjitha proceset (stock, inbound, outbound) varen prej tij.
+[4] (Heading 2) 1️⃣ Domain Layer – Entity Warehouse
+[5] (First Paragraph) Location: SMD.Domain/Entities/Warehouse.cs
+[6] (Source Code) using SMD.Domain.Common; namespace SMD.Domain.Entities; public class Warehouse : BaseEntity { public string Code { get; set; } = null!; // p.sh. WH-001 public string Name { get; set; } = null!; // p.sh. Main Warehouse public string? Address { get; set; } public bool IsActive { get; set; } = true; }
+[7] (First Paragraph) 📌 BaseEntity supozohet të ketë: - Id - CreatedAt - UpdatedAt
+[9] (Heading 2) 2️⃣ Infrastructure – DbContext
+[10] (First Paragraph) Location: SMD.Infrastructure/Persistence/SmdDbContext.cs
+[11] (Body Text) Shto DbSet:
+[12] (Source Code) public DbSet<Warehouse> Warehouses => Set<Warehouse>();
+[13] (First Paragraph) Sigurohu që using SMD.Domain.Entities; ekziston.
+[15] (Heading 2) 3️⃣ Migration & Database
+[16] (Heading 3) Krijo migration:
+[17] (Source Code) dotnet ef migrations add AddWarehousesTable
+[18] (Heading 3) Apliko në DB:
+[19] (Source Code) dotnet ef database update
+[20] (First Paragraph) 📦 Në SQL Server do krijohet tabela:
+[21] (Source Code) Warehouses - Id - Code - Name - Address - IsActive - CreatedAt - UpdatedAt
+[23] (Heading 2) 4️⃣ Application Layer – DTOs
+[24] (First Paragraph) Location: SMD.Application/Warehouses/DTOs
+[25] (Heading 3) CreateWarehouseDto.cs
+[26] (Source Code) public class CreateWarehouseDto { public string Code { get; set; } = null!; public string Name { get; set; } = null!; public string? Address { get; set; } }
+[27] (Heading 3) WarehouseDto.cs
+[28] (Source Code) public class WarehouseDto { public int Id { get; set; } public string Code { get; set; } = null!; public string Name { get; set; } = null!; public string? Address { get; set; } public bool IsActive { get; set; } }
+[30] (Heading 2) 5️⃣ API Layer – WarehousesController
+[31] (First Paragraph) Location: SMD.API/Controllers/WarehousesController.cs
+[32] (Source Code) using Microsoft.AspNetCore.Authorization; using Microsoft.AspNetCore.Mvc; using Microsoft.EntityFrameworkCore; using SMD.Application.Warehouses.DTOs; using SMD.Infrastructure.Persistence; [Authorize] [ApiController] [Route("api/warehouses")] public class WarehousesController : ControllerBase { private readonly SmdDbContext _context; public WarehousesController(SmdDbContext context) { _context = context; } [HttpGet] public async Task<IActionResult> GetAll() { var warehouses = await _context.Warehouses .Select(w => new WarehouseDto { Id = w.Id, Code = w.Code, Name = w.Name, Address = w.Address, IsActive = w.IsActive }) .ToListAsync(); return Ok(warehouses); } [HttpPost] public async Task<IActionResult> Create(CreateWarehouseDto dto) { var warehouse = new Warehouse { Code = dto.Code, Name = dto.Name, Address = dto.Address }; _context.Warehouses.Add(warehouse); await _context.SaveChangesAsync(); return Ok(warehouse.Id); } }
+[34] (Heading 2) 6️⃣ Test në Swagger
+[35] (First Paragraph) 1️⃣ Login → merr JWT 2️⃣ Authorize 🔒 → Bearer {token} 3️⃣ POST /api/warehouses
+[36] (Source Code) { "code": "WH-001", "name": "Main Warehouse", "address": "Prishtina" }
+[37] (First Paragraph) 4️⃣ GET /api/warehouses
+[38] (Body Text) ✅ Warehouse krijohet ✅ Warehouse lexohet
+[40] (Heading 2) ✅ Çfarë kemi ndërtuar deri tani
+[41] (First Paragraph) ✔️ Entity reale biznesi ✔️ Database table ✔️ Secure CRUD API ✔️ Gati për zgjerim
+[43] (Heading 2) ⏭️ HAPI I ARDHSHËM – FAZA 2
+[44] (Heading 3) HAPI 2: Locations
+[45] (Compact) Zones
+[46] (Compact) Racks
+[47] (Compact) Bins
+[48] (Compact) Hierarki reale e depos
+[49] (First Paragraph) Kur të jesh gati, vazhdojmë me: “FAZA 2 – Locations (Zones / Racks / Bins)”

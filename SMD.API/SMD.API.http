@@ -1,0 +1,6 @@
+@SMD.API_HostAddress = http://localhost:5079
+
+GET {{SMD.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

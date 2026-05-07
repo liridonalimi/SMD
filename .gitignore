@@ -1,0 +1,31 @@
+# Visual Studio
+.vs/
+bin/
+obj/
+*.user
+*.suo
+
+# Logs
+*.log
+
+# Build/temp folders
+.codex-temp/
+.codex-build/
+.codex-docx-render/
+
+# Node / React
+node_modules/
+dist/
+build/
+.env
+.env.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Database / backups
+*.db
+*.bak
+*.mdf
+*.ldf

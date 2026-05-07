@@ -1,0 +1,6 @@
+@SMD.API_nodocker_HostAddress = http://localhost:5160
+
+GET {{SMD.API_nodocker_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

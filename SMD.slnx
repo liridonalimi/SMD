@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="SMD.API/SMD.API.csproj" />
+  <Project Path="SMD.Application/SMD.Application.csproj" Id="939c3d2f-41c1-46f0-81ad-dfc31e1b286e" />
+  <Project Path="SMD.ConcurrencyTest/SMD.ConcurrencyTest.csproj" Id="e113fa01-eab0-497a-90a1-cd0c4ba63082" />
+  <Project Path="SMD.Domain/SMD.Domain.csproj" Id="a1c246b0-67c7-4975-bcfd-14998a09ff2b" />
+  <Project Path="SMD.Infrastructure/SMD.Infrastructure.csproj" Id="bdce5b41-0312-48cf-863d-b9c2adedbf8d" />
+</Solution>

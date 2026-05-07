@@ -1,0 +1,31 @@
+FILE: C:\Users\ljaljimi\OneDrive - KARL STORZ Endoskope\.dokumenteUniversitetiKadriZeka\Master_thesis\Sistemi_i_Menaxhimi_te_Depove\dokumentimi\Kapitulli_1_Hyrje_Master.docx
+PARAGRAPHS: 16 TABLES: 0 WORDS_APPROX: 465
+
+HEADINGS:
+- KAPITULLI 1
+- HYRJE
+- 1.1 Konteksti i Studimit
+- 1.2 Problematika Shkencore
+- 1.3 Qasja e Propozuar
+- 1.4 Rëndësia e Studimit
+- 1.5 Objektivat e Studimit
+- 1.6 Pyetjet Kërkimore
+- 1.7 Struktura e Punimit
+
+FIRST_PARAGRAPHS:
+[0] (Heading 1) KAPITULLI 1
+[1] (Heading 2) HYRJE
+[2] (Heading 3) 1.1 Konteksti i Studimit
+[3] (Normal) Transformimi digjital i proceseve industriale dhe logjistike ka ndryshuar rrënjësisht mënyrën se si organizatat menaxhojnë zinxhirin e furnizimit. Në këtë kontekst, menaxhimi i depove përbën një komponent kritik të infrastrukturës operacionale, duke ndikuar drejtpërdrejt në performancën ekonomike, nivelin e shërbimit dhe optimizimin e kostove. Sistemet tradicionale të menaxhimit të depove (Warehouse Management Systems – WMS) janë ndërtuar kryesisht mbi logjikë transaksionale, duke ofruar funksionalitete si regjistrimi i hyrjeve dhe daljeve të mallrave, gjurmimi i inventarit, gjenerimi i raporteve operative dhe menaxhimi i strukturës fizike të depos. Megjithatë, këto sisteme operojnë në mënyrë reaktive dhe nuk përfshijnë mekanizma inteligjentë për analizë parashikuese dhe optimizim dinamik.
+[4] (Heading 3) 1.2 Problematika Shkencore
+[5] (Normal) Rritja e kompleksitetit të operacioneve logjistike dhe variabiliteti i kërkesës krijojnë pasiguri të konsiderueshme në menaxhimin e inventarit. Kjo rezulton në dy fenomene kryesore: overstock (stok i tepërt) dhe stockout (mungesë produkti). Sistemet tradicionale nuk shfrytëzojnë potencialin e analizës së të dhënave historike për parashikim të kërkesës, optimizim të nivelit të sigurisë së stokut, zbulim të anomalive dhe mbështetje të vendimmarrjes strategjike. Kjo krijon nevojën për integrimin e Inteligjencës Artificiale brenda sistemeve operative të menaxhimit të depove.
+[6] (Heading 3) 1.3 Qasja e Propozuar
+[7] (Normal) Ky punim propozon projektimin dhe implementimin e një sistemi të integruar inteligjent që kombinon arkitekturë moderne me shtresa, integrim ndërmjet moduleve funksionale, analizë të të dhënave në kohë reale dhe modele të Machine Learning për optimizim. Sistemi përfshin menaxhim të strukturës fizike të depos (Warehouse → Zone → Rack → Bin), menaxhim të dokumenteve hyrëse dhe dalëse, gjurmim të lëvizjeve të stokut dhe një modul inteligjent për parashikim të kërkesës, optimizim të stokut dhe zbulim anomalish.
+[8] (Heading 3) 1.4 Rëndësia e Studimit
+[9] (Normal) Ky studim integron praktikisht Inteligjencën Artificiale në një sistem operativ real dhe ofron një model arkitekturor për sisteme të integruara inteligjente. Implementimi i këtij sistemi pritet të përmirësojë efikasitetin operacional të depove dhe të ulë pasiguritë në vendimmarrje. Në aspektin akademik, punimi kontribuon në fushën e sistemeve të integruara duke demonstruar se si inteligjenca artificiale mund të inkorporohet në mënyrë efektive në arkitekturë enterprise.
+[10] (Heading 3) 1.5 Objektivat e Studimit
+[11] (Normal) Objektivat kryesore të studimit janë: projektimi i një arkitekture të integruar për menaxhimin e depove, implementimi praktik i sistemit, integrimi i një moduli Machine Learning, analiza eksperimentale e performancës dhe krahasimi midis sistemit tradicional dhe sistemit inteligjent.
+[12] (Heading 3) 1.6 Pyetjet Kërkimore
+[13] (Normal) Studimi synon t’u përgjigjet pyetjeve: 1) Si mund të integrohet Inteligjenca Artificiale në një sistem ekzistues të menaxhimit të depove? 2) A redukton parashikimi i kërkesës nivelin e stockout? 3) A optimizon modeli inteligjent nivelin e inventarit? 4) Si ndikon integrimi i AI në performancën operacionale?
+[14] (Heading 3) 1.7 Struktura e Punimit
+[15] (Normal) Punimi është organizuar në kapituj që përfshijnë rishikim të literaturës, projektim arkitekturor, modelim të të dhënave, implementim teknik, implementim të moduleve AI, eksperimentim dhe analizë të rezultateve, si dhe konkluzione dhe rekomandime.

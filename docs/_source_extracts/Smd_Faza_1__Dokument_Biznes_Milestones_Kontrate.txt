@@ -1,0 +1,114 @@
+FILE: C:\Users\ljaljimi\OneDrive - KARL STORZ Endoskope\.dokumenteUniversitetiKadriZeka\Master_thesis\Sistemi_i_Menaxhimi_te_Depove\dokumentimi\Smd – Faza 1_ Dokument Biznes & Milestones Kontrate.docx
+PARAGRAPHS: 81 TABLES: 0 WORDS_APPROX: 582
+
+HEADINGS:
+- SMD – Sistemi i Menaxhimit të Depove (WMS)
+- FAZA 1 – Dokument Biznes & Prezantim për Klientin
+- 1. Përmbledhje Ekzekutive
+- 2. Qëllimi i FAZËS 1
+- 3. Arkitektura & Qasja Teknike (niveli biznes)
+- 4. Siguria & Kontrolli i Aksesit
+- Çfarë është implementuar:
+- Përfitimi për biznesin:
+- 5. Databaza & Menaxhimi i të Dhënave
+- 6. Dokumentim & Testim i API-së
+- 7. Statusi i Projektit – Pas FAZËS 1
+- E përfunduar me sukses:
+- 8. FAZAT & MILESTONES (për kontratë)
+- FAZA 1 – Foundation & Security ✅ (Completed)
+- FAZA 2 – Core WMS (Planned)
+- FAZA 3 – Business Logic & Control
+- FAZA 4 – Frontend & User Experience
+- FAZA 5 – Advanced & Integrations (opsionale)
+- 9. Strukturë Prezantimi për PowerPoint / PDF
+- Slide 1 – Titulli
+- Slide 2 – Problemi që zgjidh sistemi
+- Slide 3 – Zgjidhja (SMD)
+- Slide 4 – Arkitektura
+- Slide 5 – Siguria
+- Slide 6 – FAZAT e Projektit
+- Slide 7 – Statusi Aktual
+- Slide 8 – Hapat e radhës
+- 10. Konkluzion
+
+FIRST_PARAGRAPHS:
+[0] (Heading 1) SMD – Sistemi i Menaxhimit të Depove (WMS)
+[1] (Heading 2) FAZA 1 – Dokument Biznes & Prezantim për Klientin
+[3] (Heading 2) 1. Përmbledhje Ekzekutive
+[4] (First Paragraph) SMD (Sistemi i Menaxhimit të Depove) është një Warehouse Management System modern, i ndërtuar për të menaxhuar në mënyrë efikase: - përdoruesit - sigurinë - aksesin në sistem - bazën teknike për proceset e depos
+[5] (Body Text) FAZA 1 përfaqëson themelin teknik dhe të sigurisë mbi të cilin do të ndërtohen të gjitha funksionalitetet e ardhshme të sistemit.
+[7] (Heading 2) 2. Qëllimi i FAZËS 1
+[8] (First Paragraph) Objektivat kryesore të kësaj faze janë: - Ndërtimi i një backend-i profesional dhe të sigurt - Vendosja e një arkitekture të shkallëzueshme - Krijimi i një API-je të dokumentuar dhe testueshme - Sigurimi i aksesit në sistem vetëm për përdorues të autorizuar
+[9] (Body Text) FAZA 1 siguron që projekti të jetë i qëndrueshëm, i zgjerueshëm dhe i gatshëm për rritje.
+[11] (Heading 2) 3. Arkitektura & Qasja Teknike (niveli biznes)
+[12] (First Paragraph) Sistemi është ndërtuar duke ndjekur parime enterprise software, të përdorura gjerësisht në industri:
+[13] (Compact) Ndarje e qartë e përgjegjësive
+[14] (Compact) Strukturë modulare
+[15] (Compact) Mundësi integrimi me sisteme të tjera (ERP, BI, Mobile)
+[16] (First Paragraph) Kjo arkitekturë garanton: - kosto më të ulët mirëmbajtjeje - zhvillim më të shpejtë në fazat e ardhshme - fleksibilitet afatgjatë
+[18] (Heading 2) 4. Siguria & Kontrolli i Aksesit
+[19] (First Paragraph) Siguria është trajtuar si prioritet kryesor që në FAZËN 1.
+[20] (Heading 3) Çfarë është implementuar:
+[21] (Compact) Regjistrim dhe autentifikim i përdoruesve
+[22] (Compact) Enkriptim i fjalëkalimeve (nuk ruhen kurrë në tekst të thjeshtë)
+[23] (Compact) Autentifikim me token sigurie (JWT)
+[24] (Compact) Kontroll aksesi për endpoint-e kritike
+[25] (Heading 3) Përfitimi për biznesin:
+[26] (Compact) Mbrojtje e të dhënave
+[27] (Compact) Parandalim i aksesit të paautorizuar
+[28] (Compact) Bazë për role të ndryshme (Admin, Manager, User)
+[30] (Heading 2) 5. Databaza & Menaxhimi i të Dhënave
+[31] (First Paragraph) Sistemi përdor databazë relacione për: - ruajtje të sigurt të të dhënave - versionim të kontrolluar të strukturës së databazës - aplikim të ndryshimeve pa rrezik humbjeje
+[32] (Body Text) Kjo lejon që sistemi të evoluojë gradualisht, pa ndërprerje të shërbimit.
+[34] (Heading 2) 6. Dokumentim & Testim i API-së
+[35] (First Paragraph) API-ja është e dokumentuar në mënyrë automatike përmes një interface vizual.
+[36] (Body Text) Kjo i mundëson: - ekipit teknik - klientit - partnerëve të jashtëm
+[37] (Body Text) që të testojnë funksionalitetet pa mjete shtesë.
+[39] (Heading 2) 7. Statusi i Projektit – Pas FAZËS 1
+[40] (Heading 3) E përfunduar me sukses:
+[41] (Compact) Themeli teknik i sistemit
+[42] (Compact) Siguria dhe autentifikimi
+[43] (Compact) API funksionale dhe e dokumentuar
+[44] (First Paragraph) FAZA 1 përfundon me një sistem gati për zgjerim funksional.
+[46] (Heading 2) 8. FAZAT & MILESTONES (për kontratë)
+[47] (Heading 3) FAZA 1 – Foundation & Security ✅ (Completed)
+[48] (Compact) Arkitekturë e projektit
+[49] (Compact) Databazë bazë
+[50] (Compact) Autentifikim & Siguri
+[51] (Compact) Dokumentim API
+[53] (Heading 3) FAZA 2 – Core WMS (Planned)
+[54] (Compact) Menaxhimi i depove (Warehouses)
+[55] (Compact) Struktura e brendshme e depos (Locations)
+[56] (Compact) Menaxhimi i produkteve
+[57] (Compact) Stoku (hyrje / dalje / transfer)
+[59] (Heading 3) FAZA 3 – Business Logic & Control
+[60] (Compact) Role & Permissions
+[61] (Compact) Audit Logs
+[62] (Compact) Raporte bazë operacionale
+[64] (Heading 3) FAZA 4 – Frontend & User Experience
+[65] (Compact) Aplikacion Web (Dashboard)
+[66] (Compact) Autentifikim nga UI
+[67] (Compact) Vizualizim i stokut
+[69] (Heading 3) FAZA 5 – Advanced & Integrations (opsionale)
+[70] (Compact) Integrim ERP
+[71] (Compact) Mobile support
+[72] (Compact) Barcode / QR
+[74] (Heading 2) 9. Strukturë Prezantimi për PowerPoint / PDF
+[75] (Heading 3) Slide 1 – Titulli
+[76] (Compact) SMD – Warehouse Management System
+[77] (Heading 3) Slide 2 – Problemi që zgjidh sistemi
+[78] (Compact) Kompleksiteti i menaxhimit të depove
+[79] (Heading 3) Slide 3 – Zgjidhja (SMD)
+[80] (Compact) Sistem qendror dhe i sigurt
+[81] (Heading 3) Slide 4 – Arkitektura
+[82] (Compact) Modular & i shkallëzueshëm
+[83] (Heading 3) Slide 5 – Siguria
+[84] (Compact) JWT, kontroll aksesi
+[85] (Heading 3) Slide 6 – FAZAT e Projektit
+[86] (Compact) Roadmap
+[87] (Heading 3) Slide 7 – Statusi Aktual
+[88] (Compact) FAZA 1 e përfunduar
+[89] (Heading 3) Slide 8 – Hapat e radhës
+[90] (Compact) FAZA 2 – Core WMS
+[92] (Heading 2) 10. Konkluzion
+[93] (First Paragraph) FAZA 1 krijon një bazë të fortë teknike dhe biznesore. Sistemi është gati të kalojë në ndërtimin e funksionaliteteve reale të depos.

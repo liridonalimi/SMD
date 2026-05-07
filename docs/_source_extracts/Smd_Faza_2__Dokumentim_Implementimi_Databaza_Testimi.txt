@@ -1,0 +1,120 @@
+FILE: C:\Users\ljaljimi\OneDrive - KARL STORZ Endoskope\.dokumenteUniversitetiKadriZeka\Master_thesis\Sistemi_i_Menaxhimi_te_Depove\dokumentimi\Smd – Faza 2_ Dokumentim Implementimi, Databaza & Testimi.docx
+PARAGRAPHS: 128 TABLES: 0 WORDS_APPROX: 740
+
+HEADINGS:
+- SMD (WMS) – FAZA 2: Core WMS
+- Dokumentim Implementimi, Databaza & Testim (Enterprise)
+- 1) Qëllimi i FAZËS 2
+- 2) Teknologji & Standard
+- 3) Modeli i të Dhënave (Business Model)
+- 3.1 Warehouses
+- 3.2 Locations (Struktura e brendshme)
+- 3.3 Products
+- 3.4 Inventory (Gjendja e stokut)
+- 3.5 StockMovements (Lëvizjet e stokut)
+- 4) Databaza (Tables & Constraints)
+- 4.1 Tabelat
+- 4.2 Constraints / Rregulla integriteti
+- 4.3 Rregulla biznesi të enforce-uara
+- 5) API Endpoints (JWT Protected)
+- 5.1 Warehouses
+- 5.2 Locations
+- 5.3 Products
+- 5.4 Inventory (Queries + Reserve)
+- 5.5 Stock Movements + Audit Trail
+- 6) Testim praktik (Skenarë realë)
+- 6.1 Setup
+- 6.2 Skenari real “Receiving → Transfer → Shipping”
+- Test A: IN (Pranim)
+- Test B: TRANSFER
+- Test C: OUT (Shipping)
+- Test D: Audit trail
+- 6.3 Edge cases (kontrolle integriteti)
+- 6.4 Reserved scenario
+- 6.5 ADJUST (korrigjim me arsye)
+- 7) Vlera për biznesin pas FAZËS 2
+- 8) Çfarë vjen më pas (FAZA tjetër)
+- FAZA 3 – Control & Business Layer (rekomanduar)
+- FAZA 4 – Frontend (Dashboard)
+
+FIRST_PARAGRAPHS:
+[0] (Heading 1) SMD (WMS) – FAZA 2: Core WMS
+[1] (Heading 2) Dokumentim Implementimi, Databaza & Testim (Enterprise)
+[2] (First Paragraph) Ky dokument përmbledh gjithçka të implementuar në FAZËN 2 (Core WMS) deri në këtë pikë: Warehouses, Locations, Products, Inventory, Stock Movements & Audit Trail, bashkë me skenarët praktikë të testimit.
+[4] (Heading 2) 1) Qëllimi i FAZËS 2
+[5] (First Paragraph) FAZA 2 ndërton funksionalitetet reale të depo-s: - Modelim i strukturës së depos (lokacione) - Menaxhim i produkteve - Gjendje reale e stokut (inventory) - Lëvizje të stokut (IN/OUT/TRANSFER/ADJUST) - Audit trail për çdo ndryshim
+[6] (Body Text) Rezultati: sistem i gatshëm për operacione reale dhe integrim me UI.
+[8] (Heading 2) 2) Teknologji & Standard
+[9] (Compact) ASP.NET Core 8 Web API
+[10] (Compact) SQL Server (EF Core Code-First)
+[11] (Compact) JWT Authentication (endpoint-et e mbrojtura)
+[12] (Compact) Swagger/OpenAPI për testim
+[14] (Heading 2) 3) Modeli i të Dhënave (Business Model)
+[15] (Heading 3) 3.1 Warehouses
+[16] (First Paragraph) Warehouse përfaqëson një depo fizike.
+[17] (Body Text) Atribute kyçe: - Code (unik) - Name - Address (opsional) - IsActive
+[18] (Heading 3) 3.2 Locations (Struktura e brendshme)
+[19] (First Paragraph) Modeli hierarkik:
+[20] (Body Text) Warehouse → Zone → Rack → Bin
+[21] (Compact) Zone: segment brenda warehouse-it (p.sh. Zona A)
+[22] (Compact) Rack: raft brenda zone-s (p.sh. Rack 01)
+[23] (Compact) Bin: lokacion minimal ku vendoset stoku (p.sh. Bin 0001)
+[24] (Heading 3) 3.3 Products
+[25] (First Paragraph) Product përfaqëson artikullin e menaxhuar.
+[26] (Body Text) Atribute kyçe: - SKU (unik) - Name - Barcode (opsional / mund të jetë unik) - UnitOfMeasure (pcs/kg/m) - IsActive
+[27] (Heading 3) 3.4 Inventory (Gjendja e stokut)
+[28] (First Paragraph) Inventory përfaqëson sasinë e një produkti në një bin.
+[29] (Body Text) Unik: - (BinId, ProductId)
+[30] (Body Text) Fusha: - QtyOnHand (sasia fizike) - QtyReserved (sasia e rezervuar) - QtyAvailable = QtyOnHand − QtyReserved
+[31] (Heading 3) 3.5 StockMovements (Lëvizjet e stokut)
+[32] (First Paragraph) StockMovement regjistron çdo ndryshim në Inventory.
+[33] (Body Text) Tipet: - IN (pranim) - OUT (dalje) - TRANSFER (transfer) - ADJUST (korrigjim)
+[34] (Body Text) Audit fields: - PerformedByUserId (nga JWT) - Reference (PO/SO/TR/ADJ) - Note/Reason - CreatedAt
+[36] (Heading 2) 4) Databaza (Tables & Constraints)
+[37] (Heading 3) 4.1 Tabelat
+[38] (Compact) Warehouses
+[39] (Compact) Zones
+[40] (Compact) Racks
+[41] (Compact) Bins
+[42] (Compact) Products
+[43] (Compact) Inventories
+[44] (Compact) StockMovements
+[45] (Heading 3) 4.2 Constraints / Rregulla integriteti
+[46] (Compact) Warehouses.Code unik
+[47] (Compact) Zones: unik (WarehouseId + Code)
+[48] (Compact) Racks: unik (ZoneId + Code)
+[49] (Compact) Bins: unik (RackId + Code)
+[50] (Compact) Products.Sku unik
+[51] (Compact) Products.Barcode unik (nëse aktivizohet)
+[52] (Compact) Inventories: unik (BinId + ProductId)
+[53] (Heading 3) 4.3 Rregulla biznesi të enforce-uara
+[54] (Compact) QtyOnHand nuk shkon nën 0
+[55] (Compact) QtyReserved nuk tejkalon QtyOnHand
+[56] (Compact) Transfer bën 2 ndryshime (From/To) në të njëjtin transaksion
+[58] (Heading 2) 5) API Endpoints (JWT Protected)
+[59] (Heading 3) 5.1 Warehouses
+[60] (Compact) GET /api/warehouses
+[61] (Compact) GET /api/warehouses/{id}
+[62] (Compact) POST /api/warehouses
+[63] (Compact) PUT /api/warehouses/{id}
+[64] (Compact) DELETE (soft) /api/warehouses/{id}
+[65] (Heading 3) 5.2 Locations
+[66] (Compact) Zones:
+[67] (Compact) GET /api/warehouses/{warehouseId}/zones
+[68] (Compact) POST /api/warehouses/{warehouseId}/zones
+[69] (Compact) Racks:
+[70] (Compact) GET /api/zones/{zoneId}/racks
+[71] (Compact) POST /api/zones/{zoneId}/racks
+[72] (Compact) Bins:
+[73] (Compact) GET /api/racks/{rackId}/bins
+[74] (Compact) POST /api/racks/{rackId}/bins
+[75] (Heading 3) 5.3 Products
+[76] (Compact) GET /api/products?q=
+[77] (Compact) GET /api/products/{id}
+[78] (Compact) POST /api/products
+[79] (Compact) PUT /api/products/{id}
+[80] (Compact) DELETE (soft) /api/products/{id}
+[81] (Heading 3) 5.4 Inventory (Queries + Reserve)
+[82] (Compact) GET /api/inventory/bin/{binId}
+[83] (Compact) GET /api/inventory/product/{productId}
+[84] (Compact) POST /api/inventory/reserve

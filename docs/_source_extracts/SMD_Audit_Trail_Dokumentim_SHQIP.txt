@@ -1,0 +1,45 @@
+FILE: C:\Users\ljaljimi\OneDrive - KARL STORZ Endoskope\.dokumenteUniversitetiKadriZeka\Master_thesis\Sistemi_i_Menaxhimi_te_Depove\dokumentimi\SMD_Audit_Trail_Dokumentim_SHQIP.docx
+PARAGRAPHS: 32 TABLES: 0 WORDS_APPROX: 270
+
+HEADINGS:
+- 1. Çfarë është Audit Trail në SMD?
+- 2. Qëllimi i Audit Trail
+- 3. Veprimet që auditohet aktualisht
+- 4. Të dhënat që ruhen për çdo veprim
+- 5. Kush ka akses në Audit Logs?
+- 6. Shembuj praktik për biznesin
+- 7. Përmbledhje
+
+FIRST_PARAGRAPHS:
+[0] (Normal) SMD – Audit Trail & Kontrolli i Veprimeve
+[1] (Normal) Dokument prezantimi për klientin Data: 14.01.2026
+[3] (Heading 2) 1. Çfarë është Audit Trail në SMD?
+[4] (Normal) Audit Trail në Sistemin e Menaxhimit të Depove (SMD) është mekanizmi që regjistron çdo veprim kritik të kryer në sistem, duke garantuar gjurmueshmëri të plotë dhe kontroll operacional.
+[5] (Heading 2) 2. Qëllimi i Audit Trail
+[6] (List Bullet) Transparencë në operacione
+[7] (List Bullet) Parandalim gabimesh dhe abuzimesh
+[8] (List Bullet) Gjurmueshmëri për audit të brendshëm dhe të jashtëm
+[9] (List Bullet) Siguri ligjore dhe operacionale
+[10] (List Bullet) Përputhshmëri me standarde enterprise (SAP, Dynamics, Oracle)
+[11] (Heading 2) 3. Veprimet që auditohet aktualisht
+[12] (List Bullet) CONFIRM_INBOUND – Konfirmim pranim mallrash
+[13] (List Bullet) CONFIRM_OUTBOUND – Konfirmim dalje mallrash
+[14] (List Bullet) EXPORT_INBOUND_PDF – Shkarkim dokumenti pranim
+[15] (List Bullet) EXPORT_OUTBOUND_PDF – Shkarkim dokumenti dërgesë
+[16] (List Bullet) EXPORT_INVENTORY_CSV – Shkarkim raporti të stokut
+[17] (List Bullet) EXPORT_STOCKMOVEMENTS_CSV – Shkarkim historiku të lëvizjeve
+[18] (Heading 2) 4. Të dhënat që ruhen për çdo veprim
+[19] (List Bullet) Përdoruesi (User ID dhe roli)
+[20] (List Bullet) Veprimi i kryer (Action)
+[21] (List Bullet) Objekti i prekur (Document, Inventory, Report)
+[22] (List Bullet) Identifikuesi i objektit
+[23] (List Bullet) Detaje shtesë (p.sh. numri i dokumentit)
+[24] (List Bullet) IP adresa
+[25] (List Bullet) Data dhe ora e saktë
+[26] (Heading 2) 5. Kush ka akses në Audit Logs?
+[27] (Normal) Aktualisht, vetëm roli Administrator (Admin) ka të drejtë të shohë audit logs, me mundësi filtrimi sipas datës, veprimit dhe përdoruesit.
+[28] (Heading 2) 6. Shembuj praktik për biznesin
+[29] (Normal) Në rast gabimi në stok, sistemi lejon identifikimin e menjëhershëm të përdoruesit që ka konfirmuar dokumentin, kohën dhe sasinë e prekur.
+[30] (Normal) Gjatë kontrollit të brendshëm, menaxhmenti mund të analizojë veprimet kritike për një periudhë të caktuar dhe të verifikojë përputhshmërinë e proceseve.
+[31] (Heading 2) 7. Përmbledhje
+[32] (Normal) Audit Trail në SMD është ndërtuar në mënyrë të balancuar: regjistron vetëm veprime me ndikim real biznesi, pa ngarkuar sistemin me të dhëna të panevojshme. Kjo krijon një bazë të fortë për operim profesional dhe rritje të ardhshme.

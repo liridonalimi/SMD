@@ -1,0 +1,80 @@
+FILE: C:\Users\ljaljimi\OneDrive - KARL STORZ Endoskope\.dokumenteUniversitetiKadriZeka\Master_thesis\shq_Master_thesis_08_02_2025.docx
+PARAGRAPHS: 56 TABLES: 1 WORDS_APPROX: 407
+
+HEADINGS:
+- 1308997742026 21171009
+- Hyrje
+- Rishikim i literaturës
+- Heading 2
+- Heading 3
+- Struktura teorike
+- Të dhënat dhe metoda
+- Rezultatet
+- Diskutim
+- Konkluzion, Përmbyllje
+- Appendix, Shtojcat
+
+FIRST_PARAGRAPHS:
+[0] (Standard arial thesis) Universiteti Publik “Kadri Zeka”
+[1] (Standard arial thesis) Fakulteti Shkencave Kompjuterike
+[2] (Standard arial thesis) Sistemet e Kontrollit dhe Inteligjenca Artificiale
+[3] (Standard arial thesis) “Tituli i temes se diplomes”
+[4] (Standard arial thesis) Liridon Alimi (Ljiridon Aljimi)
+[5] (Standard arial thesis) Tezë për arritjen e titullit
+[6] (Standard arial thesis) Master i Shkencave
+[7] (Standard arial thesis) në Fakultetin e Shkencave Kompjuterike
+[8] (Standard arial thesis) të Universiteti Publik “Kadri Zeka”
+[9] (Standard arial thesis) Kontrollues, Ekzaminues
+[10] (Standard arial thesis) Prof. Asoc. Dr. Ragmi Mustafa
+[11] (Standard arial thesis) Këshill i Shkencave Kompjuterike
+[12] (Standard arial thesis) Mbikëqyrur, Supervizuar nga
+[13] (Standard arial thesis) Prof. Asoc. Dr. Ragmi Mustafa
+[14] (Standard arial thesis) Dorëzuar nga
+[15] (Standard arial thesis) Liridon Alimi (Ljiridon Aljimi)
+[16] (Standard arial thesis) 1308997742026 21171009
+[17] (Standard arial thesis) Dorëzuar më
+[18] (Standard arial thesis) Qershor XX, 2025
+[19] (Standard arial thesis) Abstrakti
+[20] (Standard arial thesis) Përshkrim i shkurtër rreth temës së diplomës.
+[21] (Standard arial thesis) Fjalëtkyçe:
+[22] (Standard arial thesis) Fjalë të cilat përmenden më së shumti në këtë temë.
+[40] (Standard arial thesis) Përmbajtja
+[54] (Standard arial thesis) Lista e tabelave dhe figurave
+[55] (table of figures) Figura 1 Logo e universitetit 4
+[57] (table of figures) Tabela 1 Shembull i tabelës 1
+[60] (Standard arial thesis) Figura 1 Logo e universitetit
+[61] (Standard arial thesis) Titulli i temës së diplomës
+[62] (Heading 1) Hyrje
+[63] (Standard arial thesis) Hyrje në temën e diplomës.
+[64] (Heading 1) Rishikim i literaturës
+[65] (Standard arial thesis) Kjo ofron një pasqyrë të njohurive aktuale, duke ju lejuar të identifikoni teoritë, metodat dhe boshllëqet përkatëse në kërkimin ekzistues që mund t'i aplikoni më vonë në tezën tuaj.
+[66] (Heading 2) Heading 2
+[67] (Heading 3) Heading 3
+[68] (Heading 1) Struktura teorike
+[69] (Standard arial thesis) Rishikimi themelor i teorive ekzistuese si një udhërrëfyes për zhvillimin e argumenteve që do të përdoren.
+[70] (Heading 1) Të dhënat dhe metoda
+[71] (Standard arial thesis) Metodologjia e kërkimit me anë të së cilës do të diskutohet dhe shpjegohen metodat e mbledhjes dhe analizës së të dhënave që keni përdorur në kërkimin tuaj.
+[72] (Heading 1) Rezultatet
+[73] (Standard arial thesis) Paraqitja e rezultateve kryesore të temës.
+[74] (Standard arial thesis) Tabela 1 Shembull i tabelës
+[75] (Standard arial thesis) Referojuni kësaj tabele, faqe 1, ose sipas emrit të kapitullit Rezultatet.
+[76] (Standard arial thesis) Kjo tabel i referohet “DIÇKAJE” në Shtojcë ose Appendix: Figura 1.
+[77] (Heading 1) Diskutim
+[78] (Standard arial thesis) Shtjellimi i kuptimit, rëndësisë dhe relevancës(lidhshmëris, përshtatshmëris) së rezultateve të arritura.
+[79] (Heading 1) Konkluzion, Përmbyllje
+[80] (Standard arial thesis) Pjesa e fundit e punimit.
+[81] (Heading 1) Appendix, Shtojcat
+[82] (Standard arial thesis) Figura 1
+[83] (Standard arial thesis) UKZ logo
+[85] (Standard arial thesis) Deklarata e Integritetit Akademik
+[86] (Standard arial thesis) Deklaroj se teza e dorëzuar është punë e imja origjinale pa ndihmën e dikujt tjetër. Të gjitha burimet direkte ose indirekte të përdorura njihen si referenca.
+[87] (Standard arial thesis) Jam i vetëdijshëm se teza në formatin dixhitak mund të rishikohet për përdorimin e ndonjë ndihmese të paautorizuar dhe për të përcaktuar nëse teza në tërësi ose pjesë të përfshira brenda në të mund të konsiderohet plagjiaturë. Për krahasimin e punës sime me burimin ekzistues, jam dakord që ajo të futet në një bazë të dhënash ku do të mbetet edhe pas rishikimit për të mundësuar krahasimin me tezat e ardhshme të dorëzuara. Megjithatë, të drejta të mëtejshme të riprodhimit dhe përdorimit nuk jepen këtu.
+[88] (Standard arial thesis) Kjo tezë nuk është paraqitur më parë në një bord, këshill tjetër provues, testues ose është publikuar.
+[90] (Standard arial thesis) Gjilan, Qershor xx, 2025 Liridon Alimi
+
+TABLE_SAMPLES:
+Table 0
+Emri | Mbiemri | Mosha
+Liridon | Alimi | 27
+Edi | Alimi | 7
+Hana | Demaj | 4

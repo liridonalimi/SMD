@@ -1,0 +1,108 @@
+FILE: C:\Users\ljaljimi\OneDrive - KARL STORZ Endoskope\.dokumenteUniversitetiKadriZeka\Master_thesis\Sistemi_i_Menaxhimi_te_Depove\dokumentimi\Smd – Faza 1_ Dokumentim Teknik & Biznes.docx
+PARAGRAPHS: 73 TABLES: 0 WORDS_APPROX: 567
+
+HEADINGS:
+- SMD – Sistemi i Menaxhimit të Depove
+- FAZA 1 – Foundation & Security
+- 1. Qëllimi i FAZËS 1
+- 2. Teknologjitë e Përdorura
+- Backend
+- Database
+- Security
+- Dokumentim & Testim
+- 3. Arkitektura e Projektit (Clean Architecture)
+- Përfitimet:
+- 4. Domain Layer (Business Core)
+- BaseEntity
+- User Entity
+- 5. Infrastructure Layer (Data & Persistence)
+- DbContext
+- Migrations
+- 6. Authentication & Authorization
+- Register & Login
+- Password Security
+- JWT Token
+- Authorization
+- 7. API Documentation (OpenAPI / Swagger)
+- Swagger UI
+- JWT Integration në Swagger
+- 8. Test Controller
+- 9. Statusi i Projektit pas FAZËS 1
+- ✅ E përfunduar
+- 🔜 Gati për FAZËN 2
+- 10. Vlera për Klientin
+
+FIRST_PARAGRAPHS:
+[0] (Heading 1) SMD – Sistemi i Menaxhimit të Depove
+[1] (Heading 2) FAZA 1 – Foundation & Security
+[2] (First Paragraph) Ky dokument përshkruan FAZËN 1 të projektit SMD (Sistemi i Menaxhimit të Depove), e cila përbën bazën teknike, arkitekturore dhe të sigurisë mbi të cilën ndërtohen të gjitha funksionalitetet e mëvonshme të WMS.
+[4] (Heading 2) 1. Qëllimi i FAZËS 1
+[5] (First Paragraph) FAZA 1 ka si objektiv: - Ndërtimin e një backend-i profesional dhe të sigurt - Vendosjen e arkitekturës së qëndrueshme (Clean Architecture) - Implementimin e Authentication & Authorization (JWT) - Krijimin e një API të dokumentuar dhe testueshme (OpenAPI / Swagger)
+[6] (Body Text) Kjo fazë siguron që sistemi të jetë: - i zgjerueshëm - i sigurt - i mirëmbajtshëm - gati për përdorim nga frontend / mobile / integrime
+[8] (Heading 2) 2. Teknologjitë e Përdorura
+[9] (Heading 3) Backend
+[10] (Compact) ASP.NET Core 8 (Web API)
+[11] (Compact) C#
+[12] (Compact) Entity Framework Core
+[13] (Heading 3) Database
+[14] (Compact) SQL Server
+[15] (Compact) Code‑First approach
+[16] (Heading 3) Security
+[17] (Compact) JWT (JSON Web Token)
+[18] (Compact) Password Hashing (BCrypt)
+[19] (Heading 3) Dokumentim & Testim
+[20] (Compact) OpenAPI (Swagger UI)
+[22] (Heading 2) 3. Arkitektura e Projektit (Clean Architecture)
+[23] (First Paragraph) Struktura e solution-it është ndërtuar sipas parimeve të Clean Architecture:
+[24] (Source Code) SMD │ ├── SMD.Domain → Rregullat e biznesit (Entities, Enums) ├── SMD.Application → Use Cases, DTOs ├── SMD.Infrastructure → Database, Persistence, Implementime teknike ├── SMD.API → Controllers, Auth, Middleware, Swagger
+[25] (Heading 3) Përfitimet:
+[26] (Compact) Ndarje e qartë e përgjegjësive
+[27] (Compact) Lehtësi për testim
+[28] (Compact) Zëvendësim i lehtë i teknologjive
+[29] (Compact) Standard enterprise
+[31] (Heading 2) 4. Domain Layer (Business Core)
+[32] (Heading 3) BaseEntity
+[33] (First Paragraph) Të gjitha entitetet trashëgojnë nga BaseEntity, e cila përmban: - Id - CreatedAt - UpdatedAt
+[34] (Body Text) Kjo siguron: - gjurmim auditimi - konsistencë në databazë
+[35] (Heading 3) User Entity
+[36] (First Paragraph) Entiteti User përfaqëson përdoruesit e sistemit dhe përmban: - Email - PasswordHash - Role - Status aktiv
+[38] (Heading 2) 5. Infrastructure Layer (Data & Persistence)
+[39] (Heading 3) DbContext
+[40] (First Paragraph) SmdDbContext është pika qendrore e komunikimit me databazën: - Konfigurim i SQL Server - DbSet për Users (dhe entitete të ardhshme)
+[41] (Heading 3) Migrations
+[42] (First Paragraph) Projekti përdor EF Core Migrations për: - krijimin e databazës - versionimin e strukturës - aplikimin e ndryshimeve pa humbje të të dhënave
+[44] (Heading 2) 6. Authentication & Authorization
+[45] (Heading 3) Register & Login
+[46] (First Paragraph) Sistemi ofron endpoint-e për: - Regjistrim përdoruesi - Autentifikim me email & password
+[47] (Heading 3) Password Security
+[48] (Compact) Password-et nuk ruhen kurrë në plain text
+[49] (Compact) Përdoret hashing (BCrypt)
+[50] (Heading 3) JWT Token
+[51] (First Paragraph) Pas login-it të suksesshëm: - Gjenerohet JWT Token - Token përmban identitetin e përdoruesit - Token përdoret për çdo kërkesë të mbrojtur
+[52] (Heading 3) Authorization
+[53] (First Paragraph) Endpoint-et kritike mbrohen me:
+[54] (Source Code) [Authorize]
+[55] (First Paragraph) Vetëm përdoruesit e autentifikuar mund t’i aksesojnë.
+[57] (Heading 2) 7. API Documentation (OpenAPI / Swagger)
+[58] (Heading 3) Swagger UI
+[59] (First Paragraph) API-ja dokumentohet automatikisht përmes Swagger: - Listë endpoint-esh - Request / Response schemas - Testim direkt nga browser-i
+[60] (Heading 3) JWT Integration në Swagger
+[61] (Compact) Konfiguruar Bearer Authentication
+[62] (Compact) Butoni Authorize 🔒 për vendosjen e token-it
+[63] (Compact) Testim i endpoint-eve të mbrojtura në kohë reale
+[65] (Heading 2) 8. Test Controller
+[66] (First Paragraph) Një endpoint testues është implementuar për të verifikuar sigurinë: - Endpoint publik - Endpoint i mbrojtur me JWT
+[67] (Body Text) Kjo konfirmon që: - Auth funksionon - Token validohet saktë
+[69] (Heading 2) 9. Statusi i Projektit pas FAZËS 1
+[70] (Heading 3) ✅ E përfunduar
+[71] (Compact) Arkitekturë enterprise
+[72] (Compact) Database funksionale
+[73] (Compact) Authentication & Authorization
+[74] (Compact) JWT Security
+[75] (Compact) API Documentation
+[76] (Heading 3) 🔜 Gati për FAZËN 2
+[77] (First Paragraph) FAZA 1 përfundon me sukses dhe krijon bazën për: - Menaxhimin e depove - Menaxhimin e produkteve - Stock - Inbound / Outbound
+[79] (Heading 2) 10. Vlera për Klientin
+[80] (First Paragraph) FAZA 1 garanton që sistemi: - është i sigurt - është i shkallëzueshëm - mund të përdoret nga shumë përdorues - është gati për zhvillim të mëtejshëm
+[81] (Body Text) Ky është themeli teknik i një WMS profesional dhe modern.
+[83] (First Paragraph) 📌 FAZA 2 – Core WMS (Warehouses, Locations, Stock) ndërtohet mbi këtë bazë të fortë.
