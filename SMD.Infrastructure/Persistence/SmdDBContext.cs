@@ -620,12 +620,16 @@ namespace SMD.Infrastructure.Persistence
                 entity.Property(x => x.Quantity).HasColumnType("decimal(18,2)");
                 entity.Property(x => x.Reference).HasMaxLength(80);
                 entity.Property(x => x.Note).HasMaxLength(500);
+                entity.Property(x => x.HelpRequestNote).HasMaxLength(500);
 
                 entity.HasIndex(x => x.TaskNo).IsUnique();
                 entity.HasIndex(x => x.Status);
                 entity.HasIndex(x => x.Type);
                 entity.HasIndex(x => x.CreatedAt);
                 entity.HasIndex(x => x.AssignedToUserId);
+                entity.HasIndex(x => x.AssignedAt);
+                entity.HasIndex(x => x.HelpRequestedAt);
+                entity.HasIndex(x => x.HelpResolvedAt);
                 entity.HasIndex(x => x.ProductId);
 
                 entity.HasOne(x => x.Product)

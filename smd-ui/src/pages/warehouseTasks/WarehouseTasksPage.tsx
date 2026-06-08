@@ -8,14 +8,17 @@ import {
   generatePickingTasks,
   generatePutawayTasks,
   regeneratePutawayTasks,
+  getWarehouseTaskDailyReport,
   getWarehouseTaskMetrics,
   listWarehouseTasks,
   regeneratePickingTasks,
   regenerateCountingTasks,
   reportWarehouseTaskProblem,
+  requestWarehouseTaskHelp,
+  resolveWarehouseTaskHelp,
   startWarehouseTask,
 } from "../../services/warehouseTasks";
-import type { WarehouseTaskDto, WarehouseTaskMetricsResponse, WarehouseTaskStatus, WarehouseTaskType } from "../../types/warehouseTasks";
+import type { WarehouseTaskDailyReportResponse, WarehouseTaskDto, WarehouseTaskMetricsResponse, WarehouseTaskStatus, WarehouseTaskType } from "../../types/warehouseTasks";
 import { getSessionUser } from "../../shared/session";
 import { listInbound } from "../../services/inbound";
 import { listOutbound } from "../../services/outbound";
@@ -55,12 +58,16 @@ function fmtNumber(v?: number | null) {
 
 export default function WarehouseTasksPage() {
   const autoBoxRef = useRef<HTMLDivElement | null>(null);
+  const taskListRef = useRef<HTMLElement | null>(null);
   const me = getSessionUser();
 
   const [items, setItems] = useState<WarehouseTaskDto[]>([]);
   const [myItems, setMyItems] = useState<WarehouseTaskDto[]>([]);
   const [unassignedItems, setUnassignedItems] = useState<WarehouseTaskDto[]>([]);
+  const [problemItems, setProblemItems] = useState<WarehouseTaskDto[]>([]);
+  const [helpItems, setHelpItems] = useState<WarehouseTaskDto[]>([]);
   const [metrics, setMetrics] = useState<WarehouseTaskMetricsResponse | null>(null);
+  const [dailyReport, setDailyReport] = useState<WarehouseTaskDailyReportResponse | null>(null);
   const [status, setStatus] = useState<WarehouseTaskStatus | "">("");
   const [type, setType] = useState<WarehouseTaskType | "">("");
   const [page, setPage] = useState(1);
@@ -96,21 +103,27 @@ export default function WarehouseTasksPage() {
     setLoading(true);
     setError(null);
     try {
-      const [list, metric, myOpen, myProgress, myBlocked, openPool, progressPool, blockedPool] = await Promise.all([
+      const [list, metric, report, myOpen, myProgress, myBlocked, openPool, progressPool, blockedPool, problems, help] = await Promise.all([
         listWarehouseTasks(status, type, page, pageSize),
         getWarehouseTaskMetrics(),
+        getWarehouseTaskDailyReport(),
         me?.userId ? listWarehouseTasks("Open", "", 1, 20, me.userId) : Promise.resolve({ data: [], total: 0, page: 1, pageSize: 20 }),
         me?.userId ? listWarehouseTasks("InProgress", "", 1, 20, me.userId) : Promise.resolve({ data: [], total: 0, page: 1, pageSize: 20 }),
         me?.userId ? listWarehouseTasks("Blocked", "", 1, 20, me.userId) : Promise.resolve({ data: [], total: 0, page: 1, pageSize: 20 }),
         listWarehouseTasks("Open", "", 1, 100),
         listWarehouseTasks("InProgress", "", 1, 100),
         listWarehouseTasks("Blocked", "", 1, 100),
+        listWarehouseTasks("Blocked", "", 1, 20),
+        listWarehouseTasks("", "", 1, 20, null, true),
       ]);
       setItems(list.data);
       setTotal(list.total);
       setMetrics(metric);
+      setDailyReport(report);
       setMyItems([...myBlocked.data, ...myProgress.data, ...myOpen.data].slice(0, 8));
       setUnassignedItems([...blockedPool.data, ...openPool.data, ...progressPool.data].filter((x) => !x.assignedToUserId).slice(0, 8));
+      setProblemItems(problems.data);
+      setHelpItems(help.data);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Nuk u lexuan veprimet e depose.");
     } finally {
@@ -266,6 +279,24 @@ export default function WarehouseTasksPage() {
     await runAction(() => reportWarehouseTaskProblem(task.id, reason.trim()));
   }
 
+  async function requestHelp(task: WarehouseTaskDto) {
+    const reason = window.prompt(
+      "Shkruaj shkurt cfare ndihme te duhet.\nShembuj: Duhet konfirmim, nuk jam i sigurt per shporten, kerkohet menaxheri."
+    );
+    if (!reason?.trim()) return;
+
+    await runAction(() => requestWarehouseTaskHelp(task.id, reason.trim()));
+  }
+
+  function showProblemList() {
+    setStatus("Blocked");
+    setType("");
+    setPage(1);
+    window.setTimeout(() => {
+      taskListRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 50);
+  }
+
   async function runGenerateAction(
     action: () => Promise<{ created: number }>,
     zeroMessage: string,
@@ -312,6 +343,61 @@ export default function WarehouseTasksPage() {
         ) : null}
       </section>
 
+      <section style={{ border: "1px solid rgba(34,197,94,0.24)", borderRadius: 16, padding: 16, background: "linear-gradient(180deg, rgba(34,197,94,0.10), var(--panel))" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start", flexWrap: "wrap", marginBottom: 12 }}>
+          <div>
+            <div style={{ color: "#bbf7d0", fontSize: 12, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+              Raporti i dites
+            </div>
+            <h2 style={{ margin: "4px 0 0" }}>Si po ecen puna sot</h2>
+            <div style={{ color: "var(--muted-strong)", marginTop: 6, fontSize: 13 }}>
+              Pamje e shpejte per punet e hapura, te marra, te perfunduara dhe ato me problem.
+            </div>
+          </div>
+          <div style={{ color: "var(--muted)", fontSize: 13 }}>{dailyReport ? fmtDate(dailyReport.date) : "-"}</div>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 10 }}>
+          <Kpi label="Hapur sot" value={dailyReport?.openedToday ?? 0} />
+          <Kpi label="Marre nga punetoret" value={dailyReport?.assignedToday ?? 0} />
+          <Kpi label="Ne pune tani" value={dailyReport?.inProgressToday ?? 0} />
+          <Kpi label="Perfunduar sot" value={dailyReport?.completedToday ?? 0} />
+          <Kpi label="Me problem sot" value={dailyReport?.problemToday ?? 0} />
+        </div>
+
+        <div style={{ marginTop: 14 }}>
+          <h3 style={{ margin: "0 0 10px" }}>Kush ka kryer cka</h3>
+          {dailyReport?.workers?.length ? (
+            <div style={{ display: "grid", gap: 8 }}>
+              {dailyReport.workers.map((worker) => (
+                <div
+                  key={worker.userId ?? worker.workerName}
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "minmax(180px, 1fr) repeat(3, minmax(90px, auto))",
+                    gap: 10,
+                    alignItems: "center",
+                    border: "1px solid var(--border)",
+                    borderRadius: 12,
+                    padding: 10,
+                    background: "var(--panel-soft)",
+                  }}
+                >
+                  <div style={{ fontWeight: 900 }}>{worker.workerName}</div>
+                  <SmallInfo label="Perfunduar" value={String(worker.completed)} />
+                  <SmallInfo label="Ne pune" value={String(worker.inProgress)} />
+                  <SmallInfo label="Problem" value={String(worker.problems)} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ color: "var(--muted)", border: "1px solid var(--border)", borderRadius: 12, padding: 12, background: "var(--panel-soft)" }}>
+              Ende nuk ka pune te regjistruara per punetore sot.
+            </div>
+          )}
+        </div>
+      </section>
+
       <section style={{ border: "1px solid rgba(96,165,250,0.24)", borderRadius: 16, padding: 16, background: "linear-gradient(180deg, rgba(59,130,246,0.11), var(--panel))" }}>
         <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start", flexWrap: "wrap", marginBottom: 12 }}>
           <div>
@@ -336,6 +422,7 @@ export default function WarehouseTasksPage() {
                 {task.status === "Open" ? <button onClick={() => runAction(() => startWarehouseTask(task.id))}>Fillo</button> : null}
                 {task.status === "Blocked" ? <button onClick={() => runAction(() => startWarehouseTask(task.id))}>Rifillo punen</button> : null}
                 {task.status !== "Done" && task.status !== "Cancelled" && task.status !== "Blocked" ? <button onClick={() => runAction(() => completeWarehouseTask(task.id))}>Perfundo</button> : null}
+                {task.status !== "Done" && task.status !== "Cancelled" ? <button onClick={() => void requestHelp(task)}>Kerko ndihme</button> : null}
                 {task.status !== "Done" && task.status !== "Cancelled" ? <button onClick={() => void reportProblem(task)}>Ka problem</button> : null}
               </>
             )}
@@ -355,6 +442,49 @@ export default function WarehouseTasksPage() {
             )}
           />
         </div>
+      </section>
+
+      <section style={{ border: "1px solid rgba(251,191,36,0.28)", borderRadius: 16, padding: 16, background: "linear-gradient(180deg, rgba(251,191,36,0.10), var(--panel))" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start", flexWrap: "wrap", marginBottom: 12 }}>
+          <div>
+            <div style={{ color: "#fde68a", fontSize: 12, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+              Pse nuk u kry puna
+            </div>
+            <h2 style={{ margin: "4px 0 0" }}>Punet me problem</h2>
+            <div style={{ color: "var(--muted-strong)", marginTop: 6, fontSize: 13 }}>
+              Ketu menaxheri sheh menjehere cka e ka ndal punen ne depo dhe kush e ka ne dore.
+            </div>
+          </div>
+          <button onClick={showProblemList}>Shiko listen</button>
+        </div>
+
+        <ProblemList
+          items={problemItems}
+          onRestart={(task) => runAction(() => startWarehouseTask(task.id))}
+          onAssign={(task) => runAction(() => assignWarehouseTask(task.id, me?.userId))}
+          canAssign={Boolean(me?.userId)}
+        />
+      </section>
+
+      <section style={{ border: "1px solid rgba(56,189,248,0.26)", borderRadius: 16, padding: 16, background: "linear-gradient(180deg, rgba(14,165,233,0.10), var(--panel))" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start", flexWrap: "wrap", marginBottom: 12 }}>
+          <div>
+            <div style={{ color: "#bae6fd", fontSize: 12, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+              Kerkesa per ndihme
+            </div>
+            <h2 style={{ margin: "4px 0 0" }}>Punetoret qe presin ndihme</h2>
+            <div style={{ color: "var(--muted-strong)", marginTop: 6, fontSize: 13 }}>
+              Keto pune nuk jane bllokuar, por punetori ka kerkuar sqarim ose konfirmim.
+            </div>
+          </div>
+          <button onClick={() => void loadAll()} disabled={loading}>Rifresko</button>
+        </div>
+
+        <HelpList
+          items={helpItems}
+          onResolve={(task) => runAction(() => resolveWarehouseTaskHelp(task.id))}
+          onRestart={(task) => runAction(() => startWarehouseTask(task.id))}
+        />
       </section>
 
       <section style={{ border: "1px solid var(--border)", borderRadius: 16, padding: 16, background: "var(--panel)" }}>
@@ -561,7 +691,7 @@ export default function WarehouseTasksPage() {
         </button>
       </section>
 
-      <section style={{ border: "1px solid var(--border)", borderRadius: 16, padding: 16, background: "var(--panel)" }}>
+      <section ref={taskListRef} style={{ border: "1px solid var(--border)", borderRadius: 16, padding: 16, background: "var(--panel)" }}>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center", marginBottom: 10 }}>
           <h2 style={{ margin: 0 }}>Lista e veprimeve</h2>
           <select value={status} onChange={(e) => setStatus(e.target.value as WarehouseTaskStatus | "")}> 
@@ -604,6 +734,8 @@ export default function WarehouseTasksPage() {
                       {x.status === "Open" ? <button onClick={() => runAction(() => startWarehouseTask(x.id))}>Nis</button> : null}
                       {x.status === "Blocked" ? <button onClick={() => runAction(() => startWarehouseTask(x.id))}>Rifillo</button> : null}
                       {x.status !== "Done" && x.status !== "Cancelled" && x.status !== "Blocked" ? <button onClick={() => runAction(() => completeWarehouseTask(x.id))}>Perfundo</button> : null}
+                      {x.status !== "Done" && x.status !== "Cancelled" ? <button onClick={() => void requestHelp(x)}>{hasActiveHelp(x) ? "Ndihma aktive" : "Kerko ndihme"}</button> : null}
+                      {hasActiveHelp(x) ? <button onClick={() => runAction(() => resolveWarehouseTaskHelp(x.id))}>U ndihmua</button> : null}
                       {x.status !== "Done" && x.status !== "Cancelled" ? <button onClick={() => void reportProblem(x)}>Ka problem</button> : null}
                       {x.status !== "Done" && x.status !== "Cancelled" ? <button onClick={() => runAction(() => cancelWarehouseTask(x.id))}>Anulo</button> : null}
                     </div>
@@ -710,6 +842,22 @@ function WorkList({
               </div>
             ) : null}
 
+            {hasActiveHelp(task) ? (
+              <div
+                style={{
+                  border: "1px solid rgba(56,189,248,0.30)",
+                  background: "rgba(12,74,110,0.18)",
+                  color: "#bae6fd",
+                  borderRadius: 10,
+                  padding: 10,
+                  fontSize: 13,
+                  fontWeight: 700,
+                }}
+              >
+                Kerkuar ndihme: {task.helpRequestNote || "Pa shenim."}
+              </div>
+            ) : null}
+
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>{action(task)}</div>
           </div>
         ))
@@ -720,6 +868,195 @@ function WorkList({
       )}
     </div>
   );
+}
+
+function HelpList({
+  items,
+  onResolve,
+  onRestart,
+}: {
+  items: WarehouseTaskDto[];
+  onResolve: (task: WarehouseTaskDto) => void;
+  onRestart: (task: WarehouseTaskDto) => void;
+}) {
+  if (!items.length) {
+    return (
+      <div style={{ border: "1px solid var(--border)", borderRadius: 14, padding: 14, color: "var(--muted)", background: "var(--panel-soft)" }}>
+        Nuk ka kerkesa per ndihme per momentin.
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 360px), 1fr))", gap: 10 }}>
+      {items.map((task) => (
+        <div
+          key={task.id}
+          style={{
+            border: "1px solid rgba(56,189,248,0.24)",
+            borderRadius: 14,
+            padding: 12,
+            background: "rgba(15,23,42,0.60)",
+            display: "grid",
+            gap: 10,
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "flex-start", flexWrap: "wrap" }}>
+            <div>
+              <div style={{ color: "#7dd3fc", fontSize: 12, fontWeight: 900 }}>{task.taskNo}</div>
+              <div style={{ fontSize: 18, fontWeight: 900, marginTop: 3 }}>{sqType[task.type]}</div>
+              <div style={{ color: "var(--muted-strong)", fontSize: 13, marginTop: 5 }}>
+                {task.productSku ? `${task.productSku} - ${task.productName ?? ""}` : "Pa produkt"}
+              </div>
+            </div>
+            <div
+              style={{
+                padding: "6px 10px",
+                borderRadius: 999,
+                border: "1px solid rgba(56,189,248,0.34)",
+                background: "rgba(12,74,110,0.24)",
+                color: "#bae6fd",
+                fontSize: 12,
+                fontWeight: 900,
+              }}
+            >
+              Pret ndihme
+            </div>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 8 }}>
+            {task.quantity ? <SmallInfo label="Sasia" value={fmtNumber(task.quantity)} /> : null}
+            {task.fromBinCode ? <SmallInfo label="Nga" value={task.fromBinCode} /> : null}
+            {task.toBinCode ? <SmallInfo label="Ne" value={task.toBinCode} /> : null}
+            {task.reference ? <SmallInfo label="Dokumenti" value={task.reference} /> : null}
+            <SmallInfo label="Punetori" value={task.assignedToUsername || "Pa punetor"} />
+            <SmallInfo label="Kerkuar" value={fmtDate(task.helpRequestedAt)} />
+          </div>
+
+          <div
+            style={{
+              border: "1px solid rgba(56,189,248,0.30)",
+              background: "rgba(12,74,110,0.18)",
+              color: "#bae6fd",
+              borderRadius: 10,
+              padding: 10,
+              fontSize: 13,
+              fontWeight: 800,
+            }}
+          >
+            Kerkesa: {task.helpRequestNote || "Pa shenim."}
+          </div>
+
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {task.status === "Blocked" ? <button onClick={() => onRestart(task)}>Rifillo punen</button> : null}
+            <button onClick={() => onResolve(task)}>U ndihmua</button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ProblemList({
+  items,
+  onRestart,
+  onAssign,
+  canAssign,
+}: {
+  items: WarehouseTaskDto[];
+  onRestart: (task: WarehouseTaskDto) => void;
+  onAssign: (task: WarehouseTaskDto) => void;
+  canAssign: boolean;
+}) {
+  if (!items.length) {
+    return (
+      <div style={{ border: "1px solid var(--border)", borderRadius: 14, padding: 14, color: "var(--muted)", background: "var(--panel-soft)" }}>
+        Nuk ka pune me problem per momentin.
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 360px), 1fr))", gap: 10 }}>
+      {items.map((task) => (
+        <div
+          key={task.id}
+          style={{
+            border: "1px solid rgba(251,191,36,0.24)",
+            borderRadius: 14,
+            padding: 12,
+            background: "rgba(15,23,42,0.60)",
+            display: "grid",
+            gap: 10,
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "flex-start", flexWrap: "wrap" }}>
+            <div>
+              <div style={{ color: "#fcd34d", fontSize: 12, fontWeight: 900 }}>{task.taskNo}</div>
+              <div style={{ fontSize: 18, fontWeight: 900, marginTop: 3 }}>{sqType[task.type]}</div>
+              <div style={{ color: "var(--muted-strong)", fontSize: 13, marginTop: 5 }}>
+                {task.productSku ? `${task.productSku} - ${task.productName ?? ""}` : "Pa produkt"}
+              </div>
+            </div>
+            <div
+              style={{
+                padding: "6px 10px",
+                borderRadius: 999,
+                border: "1px solid rgba(251,191,36,0.34)",
+                background: "rgba(120,53,15,0.24)",
+                color: "#fde68a",
+                fontSize: 12,
+                fontWeight: 900,
+              }}
+            >
+              Ka problem
+            </div>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 8 }}>
+            {task.quantity ? <SmallInfo label="Sasia" value={fmtNumber(task.quantity)} /> : null}
+            {task.fromBinCode ? <SmallInfo label="Nga" value={task.fromBinCode} /> : null}
+            {task.toBinCode ? <SmallInfo label="Ne" value={task.toBinCode} /> : null}
+            {task.reference ? <SmallInfo label="Dokumenti" value={task.reference} /> : null}
+            <SmallInfo label="Punetori" value={task.assignedToUsername || "Pa punetor"} />
+            <SmallInfo label="Raportuar" value={fmtDate(task.updatedAt ?? task.createdAt)} />
+          </div>
+
+          <div
+            style={{
+              border: "1px solid rgba(251,191,36,0.30)",
+              background: "rgba(120,53,15,0.18)",
+              color: "#fde68a",
+              borderRadius: 10,
+              padding: 10,
+              fontSize: 13,
+              fontWeight: 800,
+            }}
+          >
+            Arsyeja: {extractProblemReason(task.note)}
+          </div>
+
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {!task.assignedToUserId ? (
+              <button disabled={!canAssign} onClick={() => onAssign(task)}>Merre per zgjidhje</button>
+            ) : null}
+            <button onClick={() => onRestart(task)}>Rifillo punen</button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function extractProblemReason(note?: string | null) {
+  if (!note?.trim()) return "Nuk eshte shkruar arsye.";
+  const parts = note.split("|").map((x) => x.trim()).filter(Boolean);
+  const latestProblem = [...parts].reverse().find((x) => x.toLowerCase().startsWith("problem"));
+  return latestProblem ?? parts[parts.length - 1] ?? note;
+}
+
+function hasActiveHelp(task: WarehouseTaskDto) {
+  return Boolean(task.helpRequestedAt && !task.helpResolvedAt);
 }
 
 function SmallInfo({ label, value }: { label: string; value: string }) {

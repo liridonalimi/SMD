@@ -47,6 +47,10 @@ public class WarehouseTasksController : ControllerBase
             q = q.Where(x => x.AssignedToUserId == query.AssignedToUserId.Value);
         if (query.ProductId.HasValue)
             q = q.Where(x => x.ProductId == query.ProductId.Value);
+        if (query.NeedsHelp.HasValue)
+            q = query.NeedsHelp.Value
+                ? q.Where(x => x.HelpRequestedAt.HasValue && !x.HelpResolvedAt.HasValue)
+                : q.Where(x => !x.HelpRequestedAt.HasValue || x.HelpResolvedAt.HasValue);
 
         var total = await q.CountAsync();
         var rows = await q
@@ -106,6 +110,75 @@ public class WarehouseTasksController : ControllerBase
         });
     }
 
+    [HttpGet("daily-report")]
+    public async Task<ActionResult<WarehouseTaskDailyReportDto>> DailyReport()
+    {
+        var today = DateTime.UtcNow.Date;
+        var tomorrow = today.AddDays(1);
+
+        var createdToday = await _db.WarehouseTasks
+            .AsNoTracking()
+            .Include(x => x.AssignedToUser)
+            .Where(x => x.CreatedAt >= today && x.CreatedAt < tomorrow)
+            .ToListAsync();
+
+        var assignedToday = await _db.WarehouseTasks
+            .AsNoTracking()
+            .Include(x => x.AssignedToUser)
+            .Where(x => x.AssignedAt.HasValue && x.AssignedAt.Value >= today && x.AssignedAt.Value < tomorrow)
+            .ToListAsync();
+
+        var touchedToday = await _db.WarehouseTasks
+            .AsNoTracking()
+            .Include(x => x.AssignedToUser)
+            .Where(x =>
+                (x.StartedAt.HasValue && x.StartedAt.Value >= today && x.StartedAt.Value < tomorrow) ||
+                (x.CompletedAt.HasValue && x.CompletedAt.Value >= today && x.CompletedAt.Value < tomorrow) ||
+                (x.UpdatedAt >= today && x.UpdatedAt < tomorrow && x.Status == WarehouseTaskStatus.Blocked))
+            .ToListAsync();
+
+        var combined = createdToday
+            .Concat(assignedToday)
+            .Concat(touchedToday)
+            .GroupBy(x => x.Id)
+            .Select(g => g.First())
+            .ToList();
+
+        var workerRows = combined
+            .Where(x => x.AssignedToUserId.HasValue)
+            .GroupBy(x => new
+            {
+                x.AssignedToUserId,
+                WorkerName = x.AssignedToUser != null
+                    ? (string.IsNullOrWhiteSpace(x.AssignedToUser.Username) ? x.AssignedToUser.Email : x.AssignedToUser.Username)
+                    : "Punetor i panjohur"
+            })
+            .Select(g => new WarehouseTaskWorkerDailyReportDto
+            {
+                UserId = g.Key.AssignedToUserId,
+                WorkerName = g.Key.WorkerName ?? "Punetor i panjohur",
+                Completed = g.Count(x => x.CompletedAt.HasValue && x.CompletedAt.Value >= today && x.CompletedAt.Value < tomorrow),
+                InProgress = g.Count(x => x.Status == WarehouseTaskStatus.InProgress),
+                Problems = g.Count(x => x.Status == WarehouseTaskStatus.Blocked && x.UpdatedAt >= today && x.UpdatedAt < tomorrow)
+            })
+            .OrderByDescending(x => x.Completed)
+            .ThenByDescending(x => x.InProgress)
+            .ThenByDescending(x => x.Problems)
+            .ThenBy(x => x.WorkerName)
+            .ToList();
+
+        return Ok(new WarehouseTaskDailyReportDto
+        {
+            Date = today,
+            OpenedToday = createdToday.Count,
+            AssignedToday = assignedToday.Count,
+            InProgressToday = combined.Count(x => x.Status == WarehouseTaskStatus.InProgress),
+            CompletedToday = touchedToday.Count(x => x.CompletedAt.HasValue && x.CompletedAt.Value >= today && x.CompletedAt.Value < tomorrow),
+            ProblemToday = touchedToday.Count(x => x.Status == WarehouseTaskStatus.Blocked && x.UpdatedAt >= today && x.UpdatedAt < tomorrow),
+            Workers = workerRows
+        });
+    }
+
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id)
     {
@@ -137,6 +210,7 @@ public class WarehouseTasksController : ControllerBase
             ToBinId = req.ToBinId,
             Quantity = req.Quantity,
             AssignedToUserId = req.AssignedToUserId,
+            AssignedAt = req.AssignedToUserId.HasValue ? DateTime.UtcNow : null,
             Reference = NormalizeText(req.Reference),
             Note = NormalizeText(req.Note)
         };
@@ -181,6 +255,7 @@ public class WarehouseTasksController : ControllerBase
                 ToBinId = line.ToBinId,
                 Quantity = line.Quantity,
                 AssignedToUserId = req?.AssignedToUserId,
+                AssignedAt = req?.AssignedToUserId.HasValue == true ? DateTime.UtcNow : null,
                 Reference = doc.DocumentNo,
                 Note = $"Putaway nga dokumenti {doc.DocumentNo}"
             };
@@ -226,6 +301,7 @@ public class WarehouseTasksController : ControllerBase
                 FromBinId = line.FromBinId,
                 Quantity = line.Quantity,
                 AssignedToUserId = req?.AssignedToUserId,
+                AssignedAt = req?.AssignedToUserId.HasValue == true ? DateTime.UtcNow : null,
                 Reference = doc.DocumentNo,
                 Note = $"Picking nga dokumenti {doc.DocumentNo}"
             };
@@ -272,6 +348,7 @@ public class WarehouseTasksController : ControllerBase
                 ToBinId = line.BinId,
                 Quantity = line.ExpectedQty,
                 AssignedToUserId = req?.AssignedToUserId,
+                AssignedAt = req?.AssignedToUserId.HasValue == true ? DateTime.UtcNow : null,
                 Reference = count.CountNo,
                 Note = $"Counting nga numerimi {count.CountNo}"
             };
@@ -295,7 +372,10 @@ public class WarehouseTasksController : ControllerBase
         if (task.Status == WarehouseTaskStatus.Done || task.Status == WarehouseTaskStatus.Cancelled)
             return BadRequest("Nuk mund te ndryshohet operatori per task te mbyllur.");
 
+        var wasAssignedToDifferentUser = task.AssignedToUserId != req.AssignedToUserId;
         task.AssignedToUserId = req.AssignedToUserId;
+        if (wasAssignedToDifferentUser)
+            task.AssignedAt = req.AssignedToUserId.HasValue ? DateTime.UtcNow : null;
         task.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
 
@@ -331,6 +411,54 @@ public class WarehouseTasksController : ControllerBase
         await _db.SaveChangesAsync();
 
         await _audit.WriteAsync("REPORT_WAREHOUSE_TASK_PROBLEM", "WarehouseTask", task.Id.ToString(), $"TaskNo={task.TaskNo}, Reason={reason}");
+
+        return Ok(await BuildDtoAsync(task.Id));
+    }
+
+    [Authorize(Policy = "CanEditDocuments")]
+    [HttpPost("{id:guid}/help-request")]
+    public async Task<IActionResult> RequestHelp(Guid id, [FromBody] RequestWarehouseTaskHelpRequest req)
+    {
+        var reason = NormalizeText(req.Reason);
+        if (string.IsNullOrWhiteSpace(reason))
+            return BadRequest("Shkruaj pse te duhet ndihme.");
+
+        var task = await _db.WarehouseTasks.FirstOrDefaultAsync(x => x.Id == id);
+        if (task is null)
+            return NotFound("Task-u nuk u gjet.");
+
+        if (task.Status == WarehouseTaskStatus.Done)
+            return BadRequest("Puna e perfunduar nuk mund te kerkoje ndihme.");
+        if (task.Status == WarehouseTaskStatus.Cancelled)
+            return BadRequest("Puna e anuluar nuk mund te kerkoje ndihme.");
+
+        task.HelpRequestedAt = DateTime.UtcNow;
+        task.HelpResolvedAt = null;
+        task.HelpRequestNote = reason;
+        task.UpdatedAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync();
+
+        await _audit.WriteAsync("REQUEST_WAREHOUSE_TASK_HELP", "WarehouseTask", task.Id.ToString(), $"TaskNo={task.TaskNo}, Reason={reason}");
+
+        return Ok(await BuildDtoAsync(task.Id));
+    }
+
+    [Authorize(Policy = "CanEditDocuments")]
+    [HttpPost("{id:guid}/help-resolve")]
+    public async Task<IActionResult> ResolveHelp(Guid id)
+    {
+        var task = await _db.WarehouseTasks.FirstOrDefaultAsync(x => x.Id == id);
+        if (task is null)
+            return NotFound("Task-u nuk u gjet.");
+
+        if (!task.HelpRequestedAt.HasValue || task.HelpResolvedAt.HasValue)
+            return BadRequest("Kjo pune nuk ka kerkese ndihme aktive.");
+
+        task.HelpResolvedAt = DateTime.UtcNow;
+        task.UpdatedAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync();
+
+        await _audit.WriteAsync("RESOLVE_WAREHOUSE_TASK_HELP", "WarehouseTask", task.Id.ToString(), $"TaskNo={task.TaskNo}");
 
         return Ok(await BuildDtoAsync(task.Id));
     }
@@ -541,12 +669,17 @@ public class WarehouseTasksController : ControllerBase
             Quantity = task.Quantity,
             AssignedToUserId = task.AssignedToUserId,
             AssignedToUsername = task.AssignedToUser?.Username,
+            AssignedAt = task.AssignedAt,
             CreatedAt = task.CreatedAt,
+            UpdatedAt = task.UpdatedAt ?? task.CreatedAt,
             StartedAt = task.StartedAt,
             CompletedAt = task.CompletedAt,
+            HelpRequestedAt = task.HelpRequestedAt,
+            HelpResolvedAt = task.HelpResolvedAt,
             LeadTimeSeconds = leadTime,
             Reference = task.Reference,
-            Note = task.Note
+            Note = task.Note,
+            HelpRequestNote = task.HelpRequestNote
         };
     }
 

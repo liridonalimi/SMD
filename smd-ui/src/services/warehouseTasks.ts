@@ -1,5 +1,5 @@
 import { http } from "./http";
-import type { WarehouseTaskDto, WarehouseTaskListResponse, WarehouseTaskMetricsResponse, WarehouseTaskStatus, WarehouseTaskType } from "../types/warehouseTasks";
+import type { WarehouseTaskDailyReportResponse, WarehouseTaskDto, WarehouseTaskListResponse, WarehouseTaskMetricsResponse, WarehouseTaskStatus, WarehouseTaskType } from "../types/warehouseTasks";
 
 type CreateWarehouseTaskRequest = {
   type: number;
@@ -19,18 +19,30 @@ const typeToNumber: Record<WarehouseTaskType, number> = {
   Counting: 4,
 };
 
-export function listWarehouseTasks(status?: WarehouseTaskStatus | "", type?: WarehouseTaskType | "", page = 1, pageSize = 50, assignedToUserId?: string | null) {
+export function listWarehouseTasks(
+  status?: WarehouseTaskStatus | "",
+  type?: WarehouseTaskType | "",
+  page = 1,
+  pageSize = 50,
+  assignedToUserId?: string | null,
+  needsHelp?: boolean
+) {
   const params = new URLSearchParams();
   params.set("page", String(page));
   params.set("pageSize", String(pageSize));
   if (status) params.set("status", status);
   if (type) params.set("type", type);
   if (assignedToUserId) params.set("assignedToUserId", assignedToUserId);
+  if (needsHelp != null) params.set("needsHelp", String(needsHelp));
   return http<WarehouseTaskListResponse>(`/api/warehouse-tasks?${params.toString()}`);
 }
 
 export function getWarehouseTaskMetrics() {
   return http<WarehouseTaskMetricsResponse>("/api/warehouse-tasks/metrics");
+}
+
+export function getWarehouseTaskDailyReport() {
+  return http<WarehouseTaskDailyReportResponse>("/api/warehouse-tasks/daily-report");
 }
 
 export function createWarehouseTask(payload: Omit<CreateWarehouseTaskRequest, "type"> & { type: WarehouseTaskType }) {
@@ -63,6 +75,17 @@ export function reportWarehouseTaskProblem(id: string, reason: string) {
     method: "POST",
     body: JSON.stringify({ reason }),
   });
+}
+
+export function requestWarehouseTaskHelp(id: string, reason: string) {
+  return http<WarehouseTaskDto>(`/api/warehouse-tasks/${id}/help-request`, {
+    method: "POST",
+    body: JSON.stringify({ reason }),
+  });
+}
+
+export function resolveWarehouseTaskHelp(id: string) {
+  return http<WarehouseTaskDto>(`/api/warehouse-tasks/${id}/help-resolve`, { method: "POST" });
 }
 
 export function cancelWarehouseTask(id: string) {

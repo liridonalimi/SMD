@@ -175,6 +175,7 @@ export default function OutboundPickList() {
   }, [doc]);
 
   const groups = useMemo(() => groupLines(sortedLines, checked), [sortedLines, checked]);
+  const walkingRoute = useMemo(() => groups.map((group, index) => ({ ...group, stopNo: index + 1 })), [groups]);
   const pickedCount = sortedLines.filter((line) => checked[line.id]).length;
   const totalQuantity = sortedLines.reduce((sum, line) => sum + Number(line.quantity ?? 0), 0);
   const reservedQuantity = sortedLines.reduce((sum, line) => sum + Number(line.reservedQuantity ?? 0), 0);
@@ -233,6 +234,7 @@ export default function OutboundPickList() {
 
         <div style={summaryGridStyle}>
           <SummaryItem label="Produkte" value={String(sortedLines.length)} />
+          <SummaryItem label="Ndalesa" value={String(groups.length)} />
           <SummaryItem label="Progresi" value={`${pickedCount}/${sortedLines.length}`} />
           <SummaryItem label="Sasia totale" value={formatQty(totalQuantity)} />
           <SummaryItem label="Rezervuar" value={formatQty(reservedQuantity)} />
@@ -250,16 +252,45 @@ export default function OutboundPickList() {
           </SurfaceCard>
         ) : (
           <div style={{ display: "grid", gap: 14, marginTop: 16 }}>
-            {groups.map((group) => (
+            <SurfaceCard style={{ padding: 16 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start", flexWrap: "wrap", marginBottom: 12 }}>
+                <div>
+                  <div style={{ color: "var(--muted)", fontSize: 12, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                    Rendi i ecjes
+                  </div>
+                  <h2 style={{ margin: "4px 0 0", fontSize: 22 }}>Shko me kete rend ne depo</h2>
+                  <div style={{ color: "var(--muted-strong)", fontSize: 13, marginTop: 5 }}>
+                    Mbaro nje shporte, pastaj kalo te tjetra. Keshtu shmang ecjen e panevojshme.
+                  </div>
+                </div>
+                <div style={groupStatsStyle}>{groups.length} ndalesa</div>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 10 }}>
+                {walkingRoute.map((group) => (
+                  <div key={group.key} style={routeStopStyle}>
+                    <div style={{ color: "#bfdbfe", fontSize: 12, fontWeight: 900 }}>Ndalesa {group.stopNo}</div>
+                    <div style={{ fontSize: 18, fontWeight: 950, marginTop: 3 }}>{group.binCode}</div>
+                    {group.binName ? <div style={{ color: "var(--muted)", fontSize: 12, marginTop: 3 }}>{group.binName}</div> : null}
+                    <div style={{ color: "var(--muted-strong)", fontSize: 12, marginTop: 6 }}>
+                      {group.lines.length} produkte • {formatQty(group.totalQuantity)} cope
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </SurfaceCard>
+
+            {walkingRoute.map((group) => (
               <SurfaceCard key={group.key} style={{ padding: 0, overflow: "hidden" }}>
                 <div style={groupHeaderStyle}>
                   <div>
                     <div style={{ fontSize: 12, textTransform: "uppercase", color: "var(--muted)", letterSpacing: "0.08em" }}>
-                      Shporta
+                      Ndalesa {group.stopNo}
                     </div>
                     <div style={{ fontSize: 20, fontWeight: 900, lineHeight: 1.2 }}>
                       {group.binCode}
                     </div>
+                    {group.binName ? <div style={{ color: "var(--muted)", marginTop: 3 }}>{group.binName}</div> : null}
                   </div>
                   <div style={groupStatsStyle}>
                     {group.pickedCount}/{group.lines.length} produkte • Totali sasise: {formatQty(group.totalQuantity)}
@@ -287,6 +318,7 @@ export default function OutboundPickList() {
         <PickListPrintDocument
           checked={checked}
           doc={doc}
+          groups={walkingRoute}
           lines={sortedLines}
           pickedCount={pickedCount}
           printedAt={printedAt}
@@ -311,6 +343,7 @@ function SummaryItem({ label, value }: { label: string; value: string }) {
 function PickListPrintDocument({
   checked,
   doc,
+  groups,
   lines,
   pickedCount,
   printedAt,
@@ -318,12 +351,14 @@ function PickListPrintDocument({
 }: {
   checked: Record<string, boolean>;
   doc: OutboundDetailsDto;
+  groups: Array<ReturnType<typeof groupLines>[number] & { stopNo: number }>;
   lines: OutboundLine[];
   pickedCount: number;
   printedAt: Date;
   totalQuantity: number;
 }) {
   const status = statusLabel(doc.status);
+  const printRows = groups.flatMap((group) => group.lines.map((line) => ({ group, line })));
 
   return (
     <section className="pick-list-print" aria-hidden="true">
@@ -361,44 +396,59 @@ function PickListPrintDocument({
       {lines.length === 0 ? (
         <div className="pick-list-print-empty">Ky dokument nuk ka produkte per pergatitje.</div>
       ) : (
-        <table className="pick-list-print-table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Gati</th>
-              <th>SKU</th>
-              <th>Barkodi</th>
-              <th>Produkti</th>
-              <th>Shporta</th>
-              <th>Sasia</th>
-            </tr>
-          </thead>
-          <tbody>
-            {lines.map((line, index) => (
-              <tr key={line.id}>
-                <td>{index + 1}</td>
-                <td className="pick-list-print-check">{checked[line.id] ? "✓" : ""}</td>
-                <td>{line.productSku || "-"}</td>
-                <td>{line.productBarcode || "-"}</td>
-                <td>
-                  <strong>{line.productName || "-"}</strong>
-                  {line.productDescription ? <span>{line.productDescription}</span> : null}
-                  {(line.lotNumber || line.batchNumber || line.expiryDate) ? (
-                    <small>
-                      {line.lotNumber ? `Seria: ${line.lotNumber}` : null}
-                      {line.lotNumber && (line.batchNumber || line.expiryDate) ? " • " : null}
-                      {line.batchNumber ? `Grupi: ${line.batchNumber}` : null}
-                      {line.batchNumber && line.expiryDate ? " • " : null}
-                      {line.expiryDate ? `Skadon: ${formatDateOnly(line.expiryDate)}` : null}
-                    </small>
-                  ) : null}
-                </td>
-                <td>{line.fromBinCode || line.fromBinName || "-"}</td>
-                <td>{formatQty(line.quantity)}</td>
+        <>
+          <div className="pick-list-print-route">
+            <strong>Rendi i ecjes ne depo</strong>
+            <div>
+              {groups.map((group) => (
+                <span key={group.key}>
+                  {group.stopNo}. {group.binCode} ({group.lines.length})
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <table className="pick-list-print-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Ndalesa</th>
+                <th>Gati</th>
+                <th>SKU</th>
+                <th>Barkodi</th>
+                <th>Produkti</th>
+                <th>Shporta</th>
+                <th>Sasia</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {printRows.map(({ group, line }, index) => (
+                <tr key={line.id}>
+                  <td>{index + 1}</td>
+                  <td>{group.stopNo}</td>
+                  <td className="pick-list-print-check">{checked[line.id] ? "✓" : ""}</td>
+                  <td>{line.productSku || "-"}</td>
+                  <td>{line.productBarcode || "-"}</td>
+                  <td>
+                    <strong>{line.productName || "-"}</strong>
+                    {line.productDescription ? <span>{line.productDescription}</span> : null}
+                    {(line.lotNumber || line.batchNumber || line.expiryDate) ? (
+                      <small>
+                        {line.lotNumber ? `Seria: ${line.lotNumber}` : null}
+                        {line.lotNumber && (line.batchNumber || line.expiryDate) ? " • " : null}
+                        {line.batchNumber ? `Grupi: ${line.batchNumber}` : null}
+                        {line.batchNumber && line.expiryDate ? " • " : null}
+                        {line.expiryDate ? `Skadon: ${formatDateOnly(line.expiryDate)}` : null}
+                      </small>
+                    ) : null}
+                  </td>
+                  <td>{line.fromBinCode || line.fromBinName || "-"}</td>
+                  <td>{formatQty(line.quantity)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
       )}
 
       <div className="pick-list-print-summary">
@@ -552,6 +602,14 @@ const groupStatsStyle: CSSProperties = {
   border: "1px solid var(--border)",
   color: "var(--muted-strong)",
   fontWeight: 800,
+};
+
+const routeStopStyle: CSSProperties = {
+  padding: 12,
+  borderRadius: 12,
+  border: "1px solid color-mix(in srgb, var(--accent) 22%, var(--border))",
+  background: "linear-gradient(180deg, color-mix(in srgb, var(--accent) 12%, var(--panel-soft)), var(--panel-soft))",
+  minHeight: 92,
 };
 
 function lineButtonStyle(checked: boolean): CSSProperties {

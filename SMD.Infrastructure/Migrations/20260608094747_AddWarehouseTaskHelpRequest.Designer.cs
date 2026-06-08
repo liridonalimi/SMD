@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SMD.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using SMD.Infrastructure.Persistence;
 namespace SMD.Infrastructure.Migrations
 {
     [DbContext(typeof(SmdDbContext))]
-    partial class SmdDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260608094747_AddWarehouseTaskHelpRequest")]
+    partial class AddWarehouseTaskHelpRequest
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

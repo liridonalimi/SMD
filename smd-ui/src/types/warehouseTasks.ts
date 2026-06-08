@@ -16,12 +16,17 @@ export interface WarehouseTaskDto {
   quantity?: number | null;
   assignedToUserId?: string | null;
   assignedToUsername?: string | null;
+  assignedAt?: string | null;
   createdAt: string;
+  updatedAt: string;
   startedAt?: string | null;
   completedAt?: string | null;
+  helpRequestedAt?: string | null;
+  helpResolvedAt?: string | null;
   leadTimeSeconds?: number | null;
   reference?: string | null;
   note?: string | null;
+  helpRequestNote?: string | null;
 }
 
 export interface WarehouseTaskListResponse {
@@ -41,6 +46,23 @@ export interface WarehouseTaskMetricsResponse {
     inProgress: number;
     done: number;
     cancelled: number;
+    blocked?: number;
     avgLeadTimeSeconds: number;
+  }>;
+}
+
+export interface WarehouseTaskDailyReportResponse {
+  date: string;
+  openedToday: number;
+  assignedToday: number;
+  inProgressToday: number;
+  completedToday: number;
+  problemToday: number;
+  workers: Array<{
+    userId?: string | null;
+    workerName: string;
+    completed: number;
+    inProgress: number;
+    problems: number;
   }>;
 }

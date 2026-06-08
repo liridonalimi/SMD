@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SMD.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using SMD.Infrastructure.Persistence;
 namespace SMD.Infrastructure.Migrations
 {
     [DbContext(typeof(SmdDbContext))]
-    partial class SmdDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260608083210_AddWarehouseTaskAssignedAt")]
+    partial class AddWarehouseTaskAssignedAt
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1232,16 +1235,6 @@ namespace SMD.Infrastructure.Migrations
                     b.Property<Guid?>("FromBinId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("HelpRequestNote")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<DateTime?>("HelpRequestedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("HelpResolvedAt")
-                        .HasColumnType("datetime2");
-
                     b.Property<string>("Note")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
@@ -1285,10 +1278,6 @@ namespace SMD.Infrastructure.Migrations
                     b.HasIndex("CreatedAt");
 
                     b.HasIndex("FromBinId");
-
-                    b.HasIndex("HelpRequestedAt");
-
-                    b.HasIndex("HelpResolvedAt");
 
                     b.HasIndex("ProductId");
 

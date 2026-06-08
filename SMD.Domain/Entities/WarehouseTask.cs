@@ -23,9 +23,13 @@ public class WarehouseTask : BaseEntity
     public Guid? AssignedToUserId { get; set; }
     public User? AssignedToUser { get; set; }
 
+    public DateTime? AssignedAt { get; set; }
     public DateTime? StartedAt { get; set; }
     public DateTime? CompletedAt { get; set; }
+    public DateTime? HelpRequestedAt { get; set; }
+    public DateTime? HelpResolvedAt { get; set; }
 
     public string? Reference { get; set; }
     public string? Note { get; set; }
+    public string? HelpRequestNote { get; set; }
 }

@@ -446,6 +446,33 @@ p {
     margin: 0 0 1.5mm;
   }
 
+  .pick-list-print-route {
+    border: 1px solid #d1d5db;
+    background: #f8fafc !important;
+    padding: 3mm;
+    margin-bottom: 4mm;
+  }
+
+  .pick-list-print-route strong {
+    display: block;
+    margin-bottom: 2mm;
+    font-size: 10pt;
+  }
+
+  .pick-list-print-route div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2mm;
+  }
+
+  .pick-list-print-route span {
+    border: 1px solid #cbd5e1;
+    border-radius: 999px;
+    padding: 1.5mm 2.4mm;
+    background: #ffffff !important;
+    font-weight: 700;
+  }
+
   .pick-list-print-table {
     width: 100%;
     border-collapse: collapse;
@@ -474,27 +501,33 @@ p {
 
   .pick-list-print-table th:nth-child(2),
   .pick-list-print-table td:nth-child(2) {
-    width: 11mm;
+    width: 13mm;
     text-align: center;
   }
 
   .pick-list-print-table th:nth-child(3),
   .pick-list-print-table td:nth-child(3) {
-    width: 25mm;
+    width: 10mm;
+    text-align: center;
   }
 
   .pick-list-print-table th:nth-child(4),
   .pick-list-print-table td:nth-child(4) {
-    width: 31mm;
+    width: 24mm;
   }
 
-  .pick-list-print-table th:nth-child(6),
-  .pick-list-print-table td:nth-child(6) {
-    width: 30mm;
+  .pick-list-print-table th:nth-child(5),
+  .pick-list-print-table td:nth-child(5) {
+    width: 26mm;
   }
 
   .pick-list-print-table th:nth-child(7),
   .pick-list-print-table td:nth-child(7) {
+    width: 24mm;
+  }
+
+  .pick-list-print-table th:nth-child(8),
+  .pick-list-print-table td:nth-child(8) {
     width: 14mm;
     text-align: right;
     font-weight: 800;
