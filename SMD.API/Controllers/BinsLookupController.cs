@@ -137,12 +137,26 @@ public class BinsLookupController : ControllerBase
 
         var historicSuggestions = await _db.InboundDocumentLines
             .AsNoTracking()
-            .Where(l => l.ProductId == productId && l.ToBin.IsActive)
+            // ktheje ne kete version nese nuk punon
+            //.Where(l => l.ProductId == productId && l.ToBin.IsActive)
+            // nese dojm warning me e hek Dereference of possibly null 
+            .Where(l =>
+                l.ProductId == productId &&
+                l.ToBin != null &&
+                l.ToBin.IsActive &&
+                l.ToBin.Rack != null &&
+                l.ToBin.Rack.Zone != null &&
+                l.ToBin.Rack.Zone.Warehouse != null)
             .GroupBy(l => new
             {
                 l.ToBinId,
+                // ktheje ne kete version nese nuk punon
+                /* 
                 l.ToBin.Code,
                 l.ToBin.Name,
+                */
+                l.ToBin!.Code,
+                l.ToBin!.Name,
                 l.ToBin.RackId,
                 RackCode = l.ToBin.Rack.Code,
                 RackName = l.ToBin.Rack.Name,

@@ -2,9 +2,9 @@
 {
     public enum UserRole
     {
-        Admin = 0,
-        Manager = 3,
-        Supervisor = 2,
-        Worker = 1
+        Admin = 0, // Admin
+        Manager = 3, // Menaxher
+        Supervisor = 2, // Mbikqyres
+        Worker = 1 // Punetor
     }
 }

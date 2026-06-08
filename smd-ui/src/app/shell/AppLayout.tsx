@@ -1,8 +1,10 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { getSessionUser, roleLabel } from "../../shared/session";
-import { canViewAudit } from "../../shared/permissions";
+import { canManageUsers, canViewAudit } from "../../shared/permissions";
 import { clearToken } from "../../services/token";
+import smdAppIcon from "../../assets/logo/smd-logo-app-icon-transparent.png";
+import smdWordmark from "../../assets/logo/smd-logo-wordmark-transparent.png";
 
 const navItems = [
   { to: "/", label: "Paneli kryesor", end: true },
@@ -13,6 +15,9 @@ const navItems = [
   { to: "/sales-orders", label: "Porosite e shitjes" },
   { to: "/returns", label: "Kthimet" },
   { to: "/inventory", label: "Inventari" },
+  { to: "/warehouse-tasks", label: "Veprimet" },
+  { to: "/ct40-scan", label: "CT40 Scan" },
+  { to: "/warehouse-network", label: "Rrjeti i depove" },
   { to: "/cycle-counts", label: "Numerimi i inventarit" },
   { to: "/labels", label: "Etiketat" },
   { to: "/stock-movements", label: "Levizjet e stokut" },
@@ -175,13 +180,22 @@ export default function AppLayout() {
             boxShadow: "0 22px 48px rgba(0,0,0,0.24)",
           }}
         >
-          <div style={{ fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--muted)" }}>
-            Sistemi SMD
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <img
+              src={smdAppIcon}
+              alt="SMD"
+              style={{ width: 54, height: 54, objectFit: "contain", flex: "0 0 auto" }}
+            />
+            <img
+              src={smdWordmark}
+              alt="SMD"
+              style={{ width: 118, maxWidth: "58%", height: "auto", objectFit: "contain" }}
+            />
           </div>
-          <div style={{ fontSize: 24, fontWeight: 800, lineHeight: 1.14, marginTop: 6 }}>Sistemi i Menaxhimit te Depove</div>
+                  {/*<div style={{ fontSize: 24, fontWeight: 800, lineHeight: 1.14, marginTop: 6 }}>Sistemi i Menaxhimit te Depove</div>
           <div style={{ color: "var(--muted-strong)", marginTop: 8, fontSize: 13 }}>
             Platforme e qarte per pranime, dalje, inventar dhe levizje te stokut ne depo.
-          </div>
+          </div>*/}
         </div>
 
         <div
@@ -230,6 +244,12 @@ export default function AppLayout() {
           {canViewAudit(me?.role) ? (
             <NavLink to="/audit-logs" style={shellLinkStyle} onClick={closeSidebarOnCompact}>
               Regjistri i auditimit
+            </NavLink>
+          ) : null}
+
+          {canManageUsers(me?.role) ? (
+            <NavLink to="/admin/users" style={shellLinkStyle} onClick={closeSidebarOnCompact}>
+              Menaxhimi i perdoruesve
             </NavLink>
           ) : null}
         </nav>

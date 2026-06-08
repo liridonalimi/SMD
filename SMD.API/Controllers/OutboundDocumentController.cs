@@ -120,7 +120,7 @@ namespace SMD.API.Controllers
                 ServiceResultType.NotFound => NotFound(result.Error),
                 ServiceResultType.BadRequest => BadRequest(result.Error),
                 ServiceResultType.Conflict => Conflict(result.Error),
-                _ => StatusCode(500, "Gabim i paparashikueshem.")
+                _ => StatusCode(500, "Gabim i papritur.")
             };
         }
 
@@ -153,7 +153,7 @@ namespace SMD.API.Controllers
                 ServiceResultType.NotFound => NotFound(result.Error),
                 ServiceResultType.BadRequest => BadRequest(result.Error),
                 ServiceResultType.Conflict => Conflict(result.Error),
-                _ => StatusCode(500, "Unexpected error. Gabim i papritur.")
+                _ => StatusCode(500, "Gabim i papritur.")
             };
         }
         

@@ -6,10 +6,10 @@
   text-align: center;
   */
     width: 100%;
-    max-width: none; /* <-- hiq kufizimin 1280px */
-    margin: 0; /* <-- mos e centro */
-    padding: 0; /* <-- hiq padding global */
-    text-align: left; /* <-- mos e detyro center text */
+    max-width: none; 
+    margin: 0; 
+    padding: 0; 
+    text-align: left; 
 }
 
 .logo {

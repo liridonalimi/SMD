@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
+using QRCoder;
 using SMD.Domain.Entities;
 using SMD.Domain.Enums;
 using SMD.Infrastructure.Persistence;
@@ -312,12 +313,27 @@ public class ProductsController : ControllerBase
         return File(bytes, "application/pdf", filename);
     }
 
+    [HttpGet("{id:guid}/qr-labels.pdf")]
+    [Authorize(Policy = "CanExport")]
+    public async Task<IActionResult> ExportQrLabels(Guid id, [FromQuery] int copies = 18)
+    {
+        var product = await _db.Products.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
+        if (product is null) return NotFound();
+
+        var safeCopies = Math.Clamp(copies, 1, 96);
+        var qrPayload = BuildProductQrPayload(product);
+        var bytes = BuildQrLabelsPdf(product, qrPayload, safeCopies);
+        var filename = $"qr-{SanitizeFileName(product.Sku)}-{DateTime.Now:yyyyMMdd-HHmm}.pdf";
+
+        return File(bytes, "application/pdf", filename);
+    }
+
     [HttpPost]
     [Authorize(Policy = "CanEditMasterData")]
     public async Task<IActionResult> Create([FromBody] CreateProductRequest req)
     {
         if (string.IsNullOrWhiteSpace(req.Sku) || string.IsNullOrWhiteSpace(req.Name))
-            return BadRequest("Sku dhe Name janë të detyrueshme.");
+            return BadRequest("SKU dhe emri i produktit janë të detyrueshme.");
         if (req.MinStockLevel < 0)
             return BadRequest("Pragu minimal nuk mund te jete negativ.");
         if (req.MinStockLevel != decimal.Truncate(req.MinStockLevel))
@@ -403,7 +419,7 @@ public class ProductsController : ControllerBase
             if (newBarcode != null)
             {
                 var exists = await _db.Products.AnyAsync(x => x.Barcode == newBarcode && x.Id != id);
-                if (exists) return Conflict("Produkt tjetër me këtë Barcode ekziston.");
+                if (exists) return Conflict("Ekziston nje produkt tjetër me këtë Barcode.");
             }
 
             product.Barcode = newBarcode;
@@ -567,9 +583,9 @@ public class ProductsController : ControllerBase
                                     .Padding(5)
                                     .Column(column =>
                                     {
-                                        column.Spacing(2);
+                                        column.Spacing(1);
 
-                                        column.Item().Height(24).Row(row =>
+                                        column.Item().Height(18).Row(row =>
                                         {
                                             row.RelativeItem().Text(text =>
                                             {
@@ -591,6 +607,123 @@ public class ProductsController : ControllerBase
                 });
             }
         }).GeneratePdf();
+    }
+
+    private static byte[] BuildQrLabelsPdf(Product product, string qrPayload, int copies)
+    {
+        QuestPDF.Settings.License = LicenseType.Community;
+
+        var qrPng = BuildQrPng(qrPayload);
+        var exportDate = DateTime.Now;
+        var productName = string.IsNullOrWhiteSpace(product.Name) ? "-" : product.Name.Trim();
+        const int qrLabelsPerPage = 15;
+        var labelPages = Enumerable.Range(0, copies).Chunk(qrLabelsPerPage).ToList();
+
+        return Document.Create(container =>
+        {
+            for (var pageIndex = 0; pageIndex < labelPages.Count; pageIndex++)
+            {
+                var labelsOnPage = labelPages[pageIndex];
+
+                container.Page(page =>
+                {
+                    page.Size(PageSizes.A4);
+                    page.Margin(18);
+                    page.DefaultTextStyle(x => x.FontSize(7));
+
+                    page.Header().Row(row =>
+                    {
+                        row.RelativeItem().Column(column =>
+                        {
+                            column.Item().Text("SMD").SemiBold().FontSize(9).FontColor(Colors.BlueGrey.Darken1);
+                            column.Item().PaddingTop(1).Text("Etiketa QR per produkte").SemiBold().FontSize(16);
+                            column.Item().PaddingTop(1).Text($"Eksportuar: {exportDate:dd.MM.yyyy HH:mm}")
+                                .FontSize(8)
+                                .FontColor(Colors.Grey.Darken2);
+                        });
+
+                        row.ConstantItem(150).AlignRight().Text($"{copies} etiketa").SemiBold().FontSize(11);
+                    });
+
+                    page.Content().PaddingTop(10).Table(table =>
+                    {
+                        table.ColumnsDefinition(columns =>
+                        {
+                            columns.RelativeColumn();
+                            columns.RelativeColumn();
+                            columns.RelativeColumn();
+                        });
+
+                        foreach (var _ in labelsOnPage)
+                        {
+                            table.Cell().Padding(3).Element(label =>
+                            {
+                                label
+                                    .ShowEntire()
+                                    .Border(1)
+                                    .BorderColor(Colors.Grey.Lighten2)
+                                    .Background(Colors.White)
+                                    .Height(112)
+                                    .Padding(5)
+                                    .Column(column =>
+                                    {
+                                        column.Spacing(2);
+
+                                        column.Item().Row(row =>
+                                        {
+                                            row.RelativeItem().Text(text =>
+                                            {
+                                                text.Span(productName).SemiBold().FontSize(8).FontColor(Colors.Grey.Darken4);
+                                                text.ClampLines(2, "...");
+                                            });
+                                            row.ConstantItem(42).AlignRight().Text("SMD").SemiBold().FontSize(7).FontColor(Colors.BlueGrey.Darken2);
+                                        });
+
+                                        column.Item().Text(product.Sku).SemiBold().FontSize(7).FontColor(Colors.BlueGrey.Darken3);
+                                        column.Item().Height(66).AlignCenter().AlignMiddle().Image(qrPng).FitHeight();
+                                    });
+                            });
+                        }
+                    });
+
+                    page.Footer().AlignRight().Text($"Faqe {pageIndex + 1} / {labelPages.Count}");
+                });
+            }
+        }).GeneratePdf();
+    }
+
+    private static string BuildProductQrPayload(Product product)
+    {
+        var sku = product.Sku?.Trim() ?? string.Empty;
+        var barcode = product.Barcode?.Trim();
+        return string.IsNullOrWhiteSpace(barcode)
+            ? BuildSmdQrPayload(("TYPE", "PRODUCT"), ("SKU", sku))
+            : BuildSmdQrPayload(("TYPE", "PRODUCT"), ("SKU", sku), ("BARCODE", barcode));
+    }
+
+    private static string BuildSmdQrPayload(params (string Key, string? Value)[] fields)
+    {
+        var parts = fields
+            .Where(field => !string.IsNullOrWhiteSpace(field.Value))
+            .Select(field => $"{field.Key}={CleanQrValue(field.Value!)}");
+
+        return $"SMD|{string.Join("|", parts)}";
+    }
+
+    private static string CleanQrValue(string value)
+    {
+        return value.Trim()
+            .Replace("|", " ")
+            .Replace(";", " ")
+            .Replace("=", " ");
+    }
+
+    private static byte[] BuildQrPng(string payload)
+    {
+        using var generator = new QRCodeGenerator();
+        using var data = generator.CreateQrCode(payload, QRCodeGenerator.ECCLevel.Q);
+        var qrCode = new PngByteQRCode(data);
+        return qrCode.GetGraphic(8, drawQuietZones: true);
     }
 
     private static string BuildEan13Svg(string value)

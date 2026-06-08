@@ -1,22 +1,5 @@
 export type StockMovementType = "IN" | "OUT" | "TRANSFER" | "ADJUST";
 
-/*
-export interface StockMovementListItemDto {
-    id: string;
-    type: StockMovementType;
-    productId: string;
-    productSku: string;
-    fromBinId?: string | null;
-    fromBinCode?: string | null;
-    toBinId?: string | null;
-    toBinCode?: string | null;
-    quantity: number;
-    reference?: string | null;
-    note?: string | null;
-    performedByUserId?: string | null;
-    createdAt: string;
-}
-*/
 export interface StockMovementListItemDto {
     id: string;
     type: StockMovementType;

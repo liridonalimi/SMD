@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { searchBins, type BinHitDto } from "../../services/bins";
+import { http } from "../../services/http";
 import { listInventory } from "../../services/inventory";
 import { listBins, listRacks, listWarehouses, listZones, type LookupDto } from "../../services/lookups";
+import { getPreferredScanLookupTerm, getScanFieldValue, isExactScanMatch, normalizeScannerValue } from "../../shared/scanner";
+import { useScannerCapture } from "../../shared/useScannerCapture";
 import type { InventoryListItemDto } from "../../types/inventory";
 
 type LabelMode = "bin" | "location" | "series";
@@ -10,11 +13,20 @@ type LabelMode = "bin" | "location" | "series";
 type PrintableLabel = {
   id: string;
   mode: LabelMode;
+  binId?: string;
   title: string;
   code: string;
   subtitle: string;
   lines: string[];
   copies: number;
+};
+
+type QrPreviewLabel = {
+  title: string;
+  code: string;
+  subtitle: string;
+  line: string;
+  qrDataUrl: string;
 };
 
 const LABELS_STORAGE_KEY = "smd:labels:print-list";
@@ -41,6 +53,7 @@ function parseStoredLabel(value: unknown): PrintableLabel | null {
   return {
     id: item.id,
     mode: item.mode,
+    binId: typeof item.binId === "string" ? item.binId : undefined,
     title: item.title,
     code: item.code,
     subtitle: item.subtitle,
@@ -188,6 +201,9 @@ export default function LabelsPage() {
 
   const [inventoryTerm, setInventoryTerm] = useState("");
   const [inventoryRows, setInventoryRows] = useState<InventoryListItemDto[]>([]);
+  const [printKind, setPrintKind] = useState<"barcode" | "qr">("barcode");
+  const [qrPreviewLabels, setQrPreviewLabels] = useState<QrPreviewLabel[]>([]);
+  const [scanFeedback, setScanFeedback] = useState<{ tone: "success" | "error"; message: string } | null>(null);
 
   useEffect(() => {
     if (labels.length === 0) {
@@ -292,6 +308,12 @@ export default function LabelsPage() {
     [labels]
   );
 
+  useEffect(() => {
+    if (!scanFeedback) return;
+    const timer = window.setTimeout(() => setScanFeedback(null), 2200);
+    return () => window.clearTimeout(timer);
+  }, [scanFeedback]);
+
   function addLabel(label: PrintableLabel) {
     setError(null);
     setLabels((current) => {
@@ -307,6 +329,7 @@ export default function LabelsPage() {
     addLabel({
       id: labelKey(["bin", bin.id]),
       mode: "bin",
+      binId: bin.id,
       title: "Shporta",
       code: bin.code,
       subtitle: bin.name,
@@ -337,6 +360,7 @@ export default function LabelsPage() {
     addLabel({
       id: labelKey(["location", warehouse?.id, zone?.id, rack?.id, bin?.id]),
       mode: "location",
+      binId: bin?.id,
       title,
       code: selected.code,
       subtitle: selected.name,
@@ -370,6 +394,51 @@ export default function LabelsPage() {
       copies: 1,
     });
   }
+
+  async function handleGlobalScan(rawValue: string) {
+    const normalized = normalizeScannerValue(rawValue);
+    if (!normalized) return;
+
+    const binToken = getScanFieldValue(normalized, "bin");
+    const preferred = getPreferredScanLookupTerm(normalized);
+    const lookup = binToken || preferred;
+    if (!lookup || lookup.length < 2) return;
+
+    try {
+      const binResults = await searchBins(lookup);
+      const exactBin = binResults.find((bin) => isExactScanMatch(normalized, bin.code, bin.name))
+        ?? binResults.find((bin) => normalizeScannerValue(bin.code).toLowerCase() === lookup.toLowerCase())
+        ?? binResults[0];
+
+      if (exactBin) {
+        addBinLabel(exactBin);
+        setScanFeedback({ tone: "success", message: `U shtua etiketa per shporten ${exactBin.code}.` });
+        return;
+      }
+
+      const inventory = await listInventory({ search: lookup, page: 1, pageSize: 20, sortBy: "sku", sortDir: "asc" });
+      const exactRow = inventory.data.find((row) =>
+        isExactScanMatch(normalized, row.productSku, row.productBarcode, row.lotNumber, row.batchNumber, row.binCode)
+      ) ?? inventory.data[0];
+
+      if (exactRow) {
+        addSeriesLabel(exactRow);
+        setScanFeedback({ tone: "success", message: `U shtua etiketa serie/grupi per ${exactRow.productSku}.` });
+        return;
+      }
+
+      setScanFeedback({ tone: "error", message: `Nuk u gjet etikete per kodin: ${lookup}` });
+    } catch {
+      setScanFeedback({ tone: "error", message: "Gabim gjate skanimit. Provo perseri." });
+    }
+  }
+
+  useScannerCapture({
+    enabled: true,
+    onScan: handleGlobalScan,
+    minLength: 3,
+    maxInterKeyDelayMs: 65,
+  });
 
   function updateCopies(id: string, value: string) {
     const digits = wholeNumberInput(value);
@@ -415,9 +484,53 @@ export default function LabelsPage() {
       window.removeEventListener("afterprint", restoreTitle);
     };
 
+    setPrintKind("barcode");
+    setQrPreviewLabels([]);
     document.title = labelPrintTitle(labels);
     window.addEventListener("afterprint", restoreTitle);
     window.print();
+  }
+
+  async function onPrintQrList() {
+    const items = labels.map((x) => ({
+      binId: x.binId,
+      mode: x.mode,
+      title: x.title,
+      code: x.code,
+      subtitle: x.subtitle,
+      lines: x.lines,
+      copies: x.copies,
+    }));
+
+    if (items.length === 0) {
+      setError("Lista e printimit eshte bosh.");
+      return;
+    }
+
+    setError(null);
+    const preview = await http<QrPreviewLabel[]>("/api/bins/qr-labels-preview", {
+      method: "POST",
+      body: JSON.stringify({ items }),
+    });
+
+    if (!preview || preview.length === 0) {
+      setError("Nuk u gjeneruan etiketa QR nga lista.");
+      return;
+    }
+
+    const previousTitle = document.title;
+    const restoreTitle = () => {
+      document.title = previousTitle;
+      window.removeEventListener("afterprint", restoreTitle);
+      setPrintKind("barcode");
+      setQrPreviewLabels([]);
+    };
+
+    setPrintKind("qr");
+    setQrPreviewLabels(preview);
+    document.title = `Etiketat_QR_${new Date().toISOString().slice(0, 16).replace(/[-:T]/g, "")}`;
+    window.addEventListener("afterprint", restoreTitle);
+    window.setTimeout(() => window.print(), 30);
   }
 
   return (
@@ -434,6 +547,9 @@ export default function LabelsPage() {
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             <button type="button" onClick={() => setLabels([])} disabled={labels.length === 0} style={softButtonStyle}>
               Pastro listen
+            </button>
+            <button type="button" onClick={() => void onPrintQrList()} disabled={labels.length === 0} style={softButtonStyle}>
+              Printo etiketat QR code
             </button>
             <button type="button" onClick={onPrint} disabled={labels.length === 0} style={primaryButtonStyle}>
               Printo etiketat
@@ -515,6 +631,22 @@ export default function LabelsPage() {
               {error}
             </div>
           ) : null}
+          {scanFeedback ? (
+            <div
+              style={{
+                marginTop: 10,
+                padding: 10,
+                borderRadius: 12,
+                border: scanFeedback.tone === "success" ? "1px solid rgba(34,197,94,0.45)" : "1px solid rgba(239,68,68,0.45)",
+                background: scanFeedback.tone === "success" ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.12)",
+                color: "var(--text)",
+                fontWeight: 700,
+                fontSize: 13,
+              }}
+            >
+              {scanFeedback.message}
+            </div>
+          ) : null}
         </div>
 
         <div style={{ ...panelStyle, overflow: "hidden" }}>
@@ -575,9 +707,13 @@ export default function LabelsPage() {
       </section>
 
       <section className="labels-print-area" aria-label="Etiketat per printim">
-        {expandedLabels.map((label) => (
-          <LabelPreview key={label.copyKey} label={label} />
-        ))}
+        {printKind === "qr"
+          ? qrPreviewLabels.map((label, index) => (
+            <LabelPreview key={`qr-${label.code}-${index}`} label={{ ...label, mode: "qr" }} />
+          ))
+          : expandedLabels.map((label) => (
+            <LabelPreview key={label.copyKey} label={label} />
+          ))}
       </section>
     </div>
   );
@@ -598,18 +734,29 @@ function ModeButton({ active, onClick, children }: { active: boolean; onClick: (
   );
 }
 
-function LabelPreview({ label }: { label: PrintableLabel & { copyKey?: string } }) {
-  const svg = code128Svg(label.code);
+function LabelPreview({ label }: { label: (PrintableLabel & { copyKey?: string }) | (QrPreviewLabel & { mode: "qr" }) }) {
+  const isQr = "mode" in label && label.mode === "qr";
+  const svg = isQr ? "" : code128Svg(label.code);
 
   return (
-    <article className="warehouse-label">
-      <div className="warehouse-label-type">{label.title}</div>
+    <article className={`warehouse-label${isQr ? " qr-label" : ""}`}>
       <div className="warehouse-label-code">{label.code}</div>
       <div className="warehouse-label-subtitle">{label.subtitle}</div>
-      <div className="warehouse-label-barcode" dangerouslySetInnerHTML={{ __html: svg }} />
-      <div className="warehouse-label-barcode-text">{label.code}</div>
+      {isQr ? (
+        <>
+          <div className="warehouse-label-barcode" style={{ display: "flex", justifyContent: "center", height: "auto", marginBottom: 16 }}>
+            <img src={label.qrDataUrl} alt={label.code} style={{ width: 86, height: 86, objectFit: "contain" }} />
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="warehouse-label-barcode" dangerouslySetInnerHTML={{ __html: svg }} />
+          <div className="warehouse-label-barcode-text">{label.code}</div>
+        </>
+      )}
       <div className="warehouse-label-lines">
-        {label.lines.map((line) => <span key={line}>{line}</span>)}
+        {"lines" in label ? label.lines.map((line) => <span key={line}>{line}</span>) : null}
+        {"line" in label && label.line ? <span>{label.line}</span> : null}
       </div>
       <div className="warehouse-label-footer">SMD · {new Date().toLocaleDateString("sq-AL")}</div>
     </article>

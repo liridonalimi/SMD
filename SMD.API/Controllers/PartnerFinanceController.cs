@@ -244,7 +244,7 @@ public class PartnerFinanceController : ControllerBase
     {
         var items = await BuildUnpaidDocumentsReportAsync(q, partnerType);
         var csv = new StringBuilder();
-        csv.AppendLine("Lloji,Numri dokumentit,Partneri,Data,Totali,Paguar,Mbetja,Statusi pageses");
+        csv.AppendLine("Lloji, Numri dokumentit, Partneri, Data, Totali, i Paguar, Mbetja, Statusi pageses");
 
         foreach (var item in items)
         {
@@ -354,7 +354,7 @@ public class PartnerFinanceController : ControllerBase
             }).ToList());
         }
 
-        return BadRequest("Lloji i partnerit duhet te jete customer ose supplier.");
+        return BadRequest("Lloji i partnerit duhet te jete klient ose furnizues.");
     }
 
     [Authorize(Policy = "CanEditDocuments")]
@@ -403,10 +403,10 @@ public class PartnerFinanceController : ControllerBase
                 return NotFound("Dokumenti dales nuk u gjet.");
 
             if (outboundDoc.Status != DocumentStatus.Confirmed)
-                return BadRequest("Pagesa mund te lidhet vetem me dokument outbound te konfirmuar.");
+                return BadRequest("Pagesa mund te lidhet vetem me dokument dales/outbound te konfirmuar.");
 
             if (!hasCustomer || outboundDoc.CustomerId != req.CustomerId)
-                return BadRequest("Dokumenti outbound nuk i perket klientit te zgjedhur.");
+                return BadRequest("Dokumenti dales/outbound nuk i perket klientit te zgjedhur.");
         }
 
         if (hasInboundDocument)
@@ -419,10 +419,10 @@ public class PartnerFinanceController : ControllerBase
                 return NotFound("Dokumenti hyres nuk u gjet.");
 
             if (inboundDoc.Status != DocumentStatus.Confirmed)
-                return BadRequest("Pagesa mund te lidhet vetem me dokument inbound te konfirmuar.");
+                return BadRequest("Pagesa mund te lidhet vetem me dokument hyrës/inbound te konfirmuar.");
 
             if (!hasSupplier || inboundDoc.SupplierId != req.SupplierId)
-                return BadRequest("Dokumenti inbound nuk i perket furnizuesit te zgjedhur.");
+                return BadRequest("Dokumenti hyrës/inbound nuk i perket furnizuesit te zgjedhur.");
         }
 
         var paymentDate = req.PaymentDate?.ToUniversalTime() ?? DateTime.UtcNow;
@@ -491,7 +491,7 @@ public class PartnerFinanceController : ControllerBase
                         row.RelativeItem().Element(c => SummaryCard(c, "Nr. dokumenteve", items.Count.ToString(CultureInfo.InvariantCulture), "Filtri: " + filterLabel));
                         row.RelativeItem().Element(c => SummaryCard(c, "Totali dokumenteve", FormatMoney(totalDocuments), $"Kliente: {customerCount}"));
                         row.RelativeItem().Element(c => SummaryCard(c, "Totali i paguar", FormatMoney(totalPaid), $"Furnizues: {supplierCount}"));
-                        row.RelativeItem().Element(c => SummaryCard(c, "Mbetja totale", FormatMoney(totalBalance), "Per arketim ose pagese"));
+                        row.RelativeItem().Element(c => SummaryCard(c, "Mbetja totale", FormatMoney(totalBalance), "Per pagese"));
                     });
 
                     content.Item().Table(table =>
@@ -592,7 +592,7 @@ public class PartnerFinanceController : ControllerBase
         sheet.Cell("A2").Style.Font.Bold = true;
         sheet.Cell("A2").Style.Font.FontSize = 20;
 
-        sheet.Cell("A3").Value = $"Dokumente te konfirmuara me balance te hapur • Eksportuar: {exportDate:dd.MM.yyyy HH:mm}";
+        sheet.Cell("A3").Value = $"Dokumente te konfirmuara me balance te hapura • Eksportuar: {exportDate:dd.MM.yyyy HH:mm}";
         sheet.Range("A3:I3").Merge();
         sheet.Cell("A3").Style.Font.FontColor = XLColor.FromHtml("#475569");
 
@@ -810,9 +810,9 @@ public class PartnerFinanceController : ControllerBase
     private static string ToPaymentStatus(decimal documentTotal, decimal paidTotal)
     {
         if (documentTotal <= 0) return "Pa vlere";
-        if (paidTotal <= 0) return "I papaguar";
-        if (paidTotal >= documentTotal) return "I paguar plotesisht";
-        return "I paguar pjeserisht";
+        if (paidTotal <= 0) return "i papaguar";
+        if (paidTotal >= documentTotal) return "i paguar plotesisht";
+        return "i paguar pjeserisht";
     }
 
     private sealed record PaymentAggregate(decimal PaidTotal, DateTime? LastPaymentDate);

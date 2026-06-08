@@ -9,6 +9,7 @@ using SMD.Domain.Enums;
 using SMD.Infrastructure.Persistence;
 using SMD.Infrastructure.Services.Audit;
 using SMD.Infrastructure.Services.Validation;
+using SMD.Infrastructure.Services.WarehouseTasks;
 
 namespace SMD.Infrastructure.Services.Documents;
 
@@ -17,18 +18,21 @@ public class DocumentService : IDocumentService
     private readonly SmdDbContext _db;
     private readonly AuditLogService _audit;
     private readonly DocumentValidationService _validator;
+    private readonly ReplenishmentTaskService _replenishment;
 
     private readonly IDocumentNumberService _numbers;
     public DocumentService(
         SmdDbContext db,
         AuditLogService audit,
         DocumentValidationService validator,
-        IDocumentNumberService numbers)
+        IDocumentNumberService numbers,
+        ReplenishmentTaskService replenishment)
     {
         _db = db;
         _audit = audit;
         _validator = validator;
         _numbers = numbers;
+        _replenishment = replenishment;
     }
 
     private static string? NormalizeText(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
@@ -409,6 +413,19 @@ public class DocumentService : IDocumentService
 
         await _audit.WriteAsync("CONFIRM_OUTBOUND", "OutboundDocument", doc.Id.ToString(),
             $"DocNo={doc.DocumentNo}, Lines={doc.Lines.Count}, Reference={doc.Reference}");
+
+        var replenishmentPairs = grouped
+            .Select(x => (x.ProductId, x.FromBinId))
+            .ToList();
+        var createdReplenishment = await _replenishment.CreateForLowPickBinsAsync(replenishmentPairs, doc.DocumentNo);
+        if (createdReplenishment > 0)
+        {
+            await _audit.WriteAsync(
+                "AUTO_REPLENISHMENT_TASKS",
+                "OutboundDocument",
+                doc.Id.ToString(),
+                $"DocNo={doc.DocumentNo}, CreatedTasks={createdReplenishment}");
+        }
 
         return ServiceResult<ConfirmResponse>.Ok(new ConfirmResponse(doc.Id, doc.DocumentNo, doc.Status.ToString()));
     }

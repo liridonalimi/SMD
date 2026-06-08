@@ -27,7 +27,7 @@ import { getSuggestedBins, type SuggestedBinDto } from "../../services/bins";
 import { PageIntro } from "../../shared/ui/PageIntro";
 import { SurfaceCard } from "../../shared/ui/SurfaceCard";
 import { FieldLabel } from "../../shared/ui/FieldLabel";
-import { isExactScanMatch } from "../../shared/scanner";
+import { getPreferredScanLookupTerm, isExactScanMatch } from "../../shared/scanner";
 import { useScannerCapture } from "../../shared/useScannerCapture";
 
 const LAST_OUTBOUND_BIN_BY_PRODUCT_KEY = "smd:last-outbound-bin-by-product";
@@ -473,9 +473,9 @@ export default function OutboundDetails() {
   const selectedAvailableQty = typeof selectedBin?.availableQty === "number" ? selectedBin.availableQty : null;
   const stockIssue = selectedBin && selectedAvailableQty !== null
     ? selectedAvailableQty <= 0
-      ? "Nuk ka sasi te disponueshme per kete stok."
+      ? "Nuk ka sasi te disponueshme per kete produkt."
       : qty > selectedAvailableQty
-        ? `Sasia nuk mjafton. Gjendja: ${formatQty(selectedAvailableQty)}.`
+        ? `Sasia nuk mjafton. Sasia aktuale: ${formatQty(selectedAvailableQty)}.`
         : null
     : null;
   const canChooseBin = allowEditLines && !!selectedProduct;
@@ -484,9 +484,9 @@ export default function OutboundDetails() {
   const lineSubmitHint = !allowEditLines
     ? "Dokumenti nuk mund te ndryshohet."
     : !selectedProduct
-      ? "Zgjidh produktin."
+      ? "Zgjedh produktin."
       : !selectedBin
-        ? "Zgjidh stokun."
+        ? "Zgjedh stokun."
         : !hasValidQty
           ? "Sasia duhet te jete numer i plote me i madh se 0."
           : stockIssue;
@@ -636,7 +636,7 @@ export default function OutboundDetails() {
     getSuggestedBins(selectedProduct.id, ac.signal, undefined, true)
       .then((res) => {
         const suggestions = mergeSuggestedBins(
-          rememberedBin ? { ...rememberedBin, reason: "Shporta e fundit e perdorur ne kete sesion" } : null,
+          rememberedBin ? { ...rememberedBin, reason: "Shporta e perdorur heren e fundit" } : null,
           res ?? []
         );
         setBinHits(suggestions);
@@ -644,7 +644,7 @@ export default function OutboundDetails() {
           const first = suggestions[0];
           setSelectedBin(first);
           setBinTerm(formatStockSelectionLabel(first));
-          setSuggestionNote(first.reason ?? "Stok i sugjeruar automatikisht");
+          setSuggestionNote(first.reason ?? "Stok,produkt i sugjeruar automatikisht");
           window.setTimeout(() => {
             qtyInputRef.current?.focus();
             qtyInputRef.current?.select();
@@ -717,7 +717,7 @@ export default function OutboundDetails() {
       return {
         bin: suggestions[0] ?? null,
         suggestions: mergeSuggestedBins(
-          remembered ? { ...remembered, reason: "Shporta e fundit e perdorur ne kete sesion" } : null,
+            remembered ? { ...remembered, reason: "Shporta e perdorur heren e fundit" } : null,
           suggestions
         ),
       };
@@ -739,7 +739,7 @@ export default function OutboundDetails() {
       quantity,
     });
 
-    writeLastBinForProduct(product.id, { ...bin, reason: "Shporta e fundit e perdorur ne kete sesion" });
+      writeLastBinForProduct(product.id, { ...bin, reason: "Shporta e perdorur heren e fundit" });
 
     setProductTerm("");
     setSelectedProduct(null);
@@ -755,7 +755,7 @@ export default function OutboundDetails() {
     await refresh();
     setActionNotice(
       wasEmptyBeforeAdd
-        ? "Produkti u shtua. Vazhdoni me produktin tjeter ose konfirmoni dokumentin."
+        ? "Produkti u shtua. Vazhdoni me produkttet tjera ose konfirmoni dokumentin."
         : "Produkti u shtua me sukses."
     );
 
@@ -769,7 +769,7 @@ export default function OutboundDetails() {
   }
 
   async function handleScannerSubmit(rawTerm: string) {
-    const term = rawTerm.trim();
+    const term = getPreferredScanLookupTerm(rawTerm);
     if (!term) return false;
 
     try {
@@ -782,7 +782,7 @@ export default function OutboundDetails() {
           setProductHits(results);
           setShowProductDropdown(true);
           setActiveProductIndex(0);
-          showScanFeedback("error", "Produkti nuk u gjet me perputhje ekzakte nga barkodi");
+          showScanFeedback("error", "Produkti nuk u gjet ne perputhje me barkodin");
         } else {
           showScanFeedback("error", "Produkti nuk u gjet nga barkodi");
         }
@@ -796,7 +796,7 @@ export default function OutboundDetails() {
       if (preferred.bin) {
         setSelectedBin(preferred.bin);
         setBinTerm(formatStockSelectionLabel(preferred.bin));
-        setSuggestionNote(preferred.bin.reason ?? "Stok i sugjeruar automatikisht");
+        setSuggestionNote(preferred.bin.reason ?? "Produkt,stok i sugjeruar");
       }
 
       showScanFeedback("success", `${product.sku} u lexua. Verifiko stokun FEFO dhe sasine para shtimit.`);
@@ -880,7 +880,7 @@ export default function OutboundDetails() {
 
     const nextQty = parseWholeQty(raw);
     if (!Number.isInteger(nextQty) || nextQty <= 0) {
-      setErr("Shkruaj nje sasi te plote me te madhe se 0.");
+      setErr("Jep sasin si numer te plote, me i madh se 0.");
       return;
     }
 
@@ -1192,7 +1192,7 @@ export default function OutboundDetails() {
                     void onAddLine();
                   }
                 }}
-                placeholder="p.sh. SKU-0015 ose Frutex ose 223456..."
+                placeholder="p.sh. SKU-0015, Frutex ose 223456..."
                 style={{
                   padding: 10,
                   borderRadius: 10,
@@ -1452,7 +1452,7 @@ export default function OutboundDetails() {
                     void onAddLine();
                   }
                 }}
-                placeholder={selectedProduct ? "Kerko shporte, seri ose grup" : "Zgjidh fillimisht produktin"}
+                placeholder={selectedProduct ? "Kerko shporte, seri ose grup prodhimi" : "Zgjedh fillimisht produktin"}
                 style={{ padding: 10, borderRadius: 10, width: 320, opacity: canChooseBin ? 1 : 0.65 }}
               />
 
@@ -1676,7 +1676,7 @@ export default function OutboundDetails() {
               ? warningReviewIssuesCount > 0
                 ? `Ka ${warningReviewIssuesCount} paralajmerime per kontroll, por nuk e bllokojne konfirmimin.`
                 : `Ka ${doc.lines.length} produkte, sasi totale ${formatQty(totalQuantity)} dhe asnje paralajmerim aktiv.`
-              : `Ka ${blockingReviewIssuesCount} sinjale qe duhet te rregullohen para konfirmimit.`}
+              : `Ka ${blockingReviewIssuesCount} pika qe duhet te rregullohen para konfirmimit.`}
           </div>
         </div>
       </div>
@@ -1848,7 +1848,7 @@ export default function OutboundDetails() {
                         type="button"
                         disabled={doc.status !== 0 || savingPriceTierLineId === l.id}
                         onClick={() => void onPriceTierChange(l.id, l.priceTier, 0)}
-                        title="Perdor cmimin e pakices per kete outbound"
+                        title="Perdor cmimin e pakices per kete dalje"
                         style={selectablePriceChipStyle(priceChipRetailStyle, l.priceTier === 0, doc.status !== 0 || savingPriceTierLineId === l.id)}
                       >
                         Pakice: {formatMoney(l.retailPrice)}
@@ -1857,7 +1857,7 @@ export default function OutboundDetails() {
                         type="button"
                         disabled={doc.status !== 0 || savingPriceTierLineId === l.id}
                         onClick={() => void onPriceTierChange(l.id, l.priceTier, 1)}
-                        title="Perdor cmimin e shumices per kete outbound"
+                                    title="Perdor cmimin e shumices per kete dalje"
                         style={selectablePriceChipStyle(priceChipWholesaleStyle, l.priceTier === 1, doc.status !== 0 || savingPriceTierLineId === l.id)}
                       >
                         Shumice: {formatMoney(l.wholesalePrice)}
@@ -1866,7 +1866,7 @@ export default function OutboundDetails() {
                         type="button"
                         disabled={doc.status !== 0 || savingPriceTierLineId === l.id}
                         onClick={() => void onPriceTierChange(l.id, l.priceTier, 2)}
-                        title="Perdor cmimin VIP per kete outbound"
+                                    title="Perdor cmimin VIP per kete dalje"
                         style={selectablePriceChipStyle(priceChipVipStyle, l.priceTier === 2, doc.status !== 0 || savingPriceTierLineId === l.id)}
                       >
                         VIP: {formatMoney(l.vipPrice)}

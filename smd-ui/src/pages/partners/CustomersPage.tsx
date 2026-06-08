@@ -5,7 +5,7 @@ export default function CustomersPage() {
   return (
     <PartnerDirectoryPage
       title="Klientet"
-      subtitle="Regjistro dhe menaxho klientet qe do lidhen me dokumentet outbound."
+      subtitle="Regjistro dhe menaxho klientet."
       entityLabel="Klient"
       listItems={listCustomers}
       createItem={createCustomer}

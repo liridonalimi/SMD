@@ -49,6 +49,24 @@ export type DashboardPaymentAlertItem = {
   createdAt: string;
 };
 
+export type DashboardWarehouseTaskAlertItem = {
+  taskId: string;
+  taskNo: string;
+  type: string;
+  status: string;
+  productCode?: string | null;
+  productName?: string | null;
+  fromBinCode?: string | null;
+  toBinCode?: string | null;
+  quantity?: number | null;
+  assignedToUsername?: string | null;
+  reference?: string | null;
+  note?: string | null;
+  createdAt: string;
+  isUnassigned: boolean;
+  isStale: boolean;
+};
+
 export type DashboardSummary = {
   inboundTodayCount: number;
   outboundTodayCount: number;
@@ -60,6 +78,9 @@ export type DashboardSummary = {
   outOfStockProductsCount: number;
   lowStockProductsCount: number;
   unpaidDocumentsCount: number;
+  openWarehouseTasksCount: number;
+  unassignedWarehouseTasksCount: number;
+  staleWarehouseTasksCount: number;
   customerDebtTotal: number;
   supplierPayableTotal: number;
   latestAuditLogs: AuditLogItem[];
@@ -68,4 +89,5 @@ export type DashboardSummary = {
   topCustomerDebtors: DashboardPartnerBalanceAlertItem[];
   topSupplierPayables: DashboardPartnerBalanceAlertItem[];
   paymentAlerts: DashboardPaymentAlertItem[];
+  warehouseTaskAlerts: DashboardWarehouseTaskAlertItem[];
 };

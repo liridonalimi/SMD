@@ -4,7 +4,7 @@ namespace SMD.Domain.Entities;
 
 public class Product : BaseEntity
 {
-    public string Sku { get; set; } = null!;          // unik, p.sh. SKU-0001
+    public string Sku { get; set; } = null!;          // unik
     public string Name { get; set; } = null!;         // emri i produktit
     public string? Barcode { get; set; }              // opsional
     public string? Description { get; set; }          // opsional

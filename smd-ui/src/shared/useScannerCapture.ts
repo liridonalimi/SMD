@@ -40,6 +40,10 @@ export function useScannerCapture({
       lastKeyAtRef.current = 0;
     }
 
+    function isSuffixEvent(event: KeyboardEvent) {
+      return suffixKeys.includes(event.key) || suffixKeys.includes(event.code);
+    }
+
     function handleKeyDown(event: KeyboardEvent) {
       if (event.ctrlKey || event.altKey || event.metaKey) return;
 
@@ -57,7 +61,7 @@ export function useScannerCapture({
         bufferRef.current = "";
       }
 
-      if (suffixKeys.includes(event.key)) {
+      if (isSuffixEvent(event)) {
         const value = bufferRef.current.trim();
         resetBuffer();
         if (value.length >= minLength) {
@@ -81,7 +85,24 @@ export function useScannerCapture({
       }
     }
 
+    function handlePaste(event: ClipboardEvent) {
+      const pasted = event.clipboardData?.getData("text")?.trim() ?? "";
+      if (pasted.length < minLength) return;
+
+      const target = event.target;
+      const targetElement = target instanceof HTMLElement ? target : null;
+      if (targetElement?.dataset.smdScannerInput === "product") return;
+
+      resetBuffer();
+      event.preventDefault();
+      void onScanRef.current(pasted);
+    }
+
     window.addEventListener("keydown", handleKeyDown, true);
-    return () => window.removeEventListener("keydown", handleKeyDown, true);
+    window.addEventListener("paste", handlePaste, true);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown, true);
+      window.removeEventListener("paste", handlePaste, true);
+    };
   }, [enabled, maxInterKeyDelayMs, minLength, suffixKeys]);
 }

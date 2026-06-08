@@ -28,8 +28,8 @@ public class ImportController : ControllerBase
     }
 
     [HttpPost("products")]
-    [RequestSizeLimit(10 * 1024 * 1024)]
-    public async Task<IActionResult> ImportProducts([FromForm] IFormFile file, [FromQuery] bool updateExisting = false)
+    [RequestSizeLimit(10 * 1024 * 1024)]    //[FromForm] ka qen e vendosur para IFormFile file, e editova per shkak se ne swagger nuk hapej
+    public async Task<IActionResult> ImportProducts(IFormFile file, [FromQuery] bool updateExisting = false)
     {
         var rows = await ReadRowsAsync(file);
         if (rows.Result is not null) return rows.Result;
@@ -70,7 +70,7 @@ public class ImportController : ControllerBase
             {
                 if (!IsValidEan13(barcode))
                 {
-                    AddError(result, row.RowNumber, $"Barcode '{barcodeRaw}' nuk eshte EAN-13 valid. Ruaje kolonen barcode si Text ne Excel, jo si numer/scientific notation.");
+                    AddError(result, row.RowNumber, $"Barcode '{barcodeRaw}' nuk eshte i standardit EAN-13. Ruaje kolonen barcode si Text ne Excel, jo si numer me scientific notation.");
                     continue;
                 }
 
@@ -155,13 +155,13 @@ public class ImportController : ControllerBase
     }
 
     [HttpPost("customers")]
-    [RequestSizeLimit(10 * 1024 * 1024)]
-    public Task<IActionResult> ImportCustomers([FromForm] IFormFile file, [FromQuery] bool updateExisting = false) =>
+    [RequestSizeLimit(10 * 1024 * 1024)]    //[FromForm] ka qen e vendosur para IFormFile file, e editova per shkak se ne swagger nuk hapej
+    public Task<IActionResult> ImportCustomers(IFormFile file, [FromQuery] bool updateExisting = false) =>
         ImportPartnersAsync(file, updateExisting, true);
 
     [HttpPost("suppliers")]
-    [RequestSizeLimit(10 * 1024 * 1024)]
-    public Task<IActionResult> ImportSuppliers([FromForm] IFormFile file, [FromQuery] bool updateExisting = false) =>
+    [RequestSizeLimit(10 * 1024 * 1024)]    //[FromForm] ka qen e vendosur para IFormFile file, e editova per shkak se ne swagger nuk hapej
+    public Task<IActionResult> ImportSuppliers(IFormFile file, [FromQuery] bool updateExisting = false) =>
         ImportPartnersAsync(file, updateExisting, false);
 
     private async Task<IActionResult> ImportPartnersAsync(IFormFile file, bool updateExisting, bool customers)
@@ -300,7 +300,7 @@ public class ImportController : ControllerBase
     {
         if (file is null || file.Length == 0)
         {
-            return ([], new BadRequestObjectResult("Zgjidh nje file XLSX ose CSV per import."));
+            return ([], new BadRequestObjectResult("Zgjidh nje file te formatit XLSX, XLS ose CSV per import."));
         }
 
         var extension = Path.GetExtension(file.FileName).ToLowerInvariant();

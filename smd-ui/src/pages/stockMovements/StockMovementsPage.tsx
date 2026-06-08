@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useMemo, useState } from "react";
 import {
     listStockMovements,
@@ -18,9 +18,14 @@ import type {
 import { errorMessage } from "../../shared/errors";
 import { env } from "../../config/env";
 import { getToken, clearToken } from "../../services/token";
+import { searchBins, type BinHitDto } from "../../services/bins";
 import { PageIntro } from "../../shared/ui/PageIntro";
 import { SurfaceCard } from "../../shared/ui/SurfaceCard";
 import { FieldLabel } from "../../shared/ui/FieldLabel";
+import { getScanFieldValue, isExactScanMatch, normalizeScannerValue, parseScanPayload } from "../../shared/scanner";
+import { useScannerCapture } from "../../shared/useScannerCapture";
+import { canMoveStockDirectly } from "../../shared/permissions";
+import { getSessionUser } from "../../shared/session";
 
 type LookupDto = {
     id: string;
@@ -32,9 +37,11 @@ type ProductOption = {
     id: string;
     sku: string;
     name: string;
+    barcode?: string | null;
 };
 
 type ActionMode = "IN" | "OUT" | "TRANSFER" | "ADJUST";
+type ScanTarget = "product" | "fromBin" | "toBin" | "bin";
 
 function formatDate(value: string) {
     try {
@@ -131,10 +138,13 @@ async function fetchProducts(): Promise<ProductOption[]> {
             id: x.id,
             sku: x.sku,
             name: x.name,
+            barcode: x.barcode,
         }));
 }
 
 export default function StockMovementPage() {
+    const me = getSessionUser();
+    const allowDirectStockMove = canMoveStockDirectly(me?.role);
     const [rows, setRows] = useState<StockMovementListItemDto[]>([]);
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
@@ -166,6 +176,9 @@ export default function StockMovementPage() {
     const [reference, setReference] = useState("");
     const [note, setNote] = useState("");
     const [reason, setReason] = useState("");
+    const [scanTarget, setScanTarget] = useState<ScanTarget>("product");
+    const [scanInput, setScanInput] = useState("");
+    const [scanFeedback, setScanFeedback] = useState<{ tone: "success" | "error"; message: string } | null>(null);
 
     const [filterBins, setFilterBins] = useState<LookupDto[]>([]);
 
@@ -302,6 +315,135 @@ export default function StockMovementPage() {
         [products]
     );
 
+    function findProductByScan(value: string) {
+        const term = normalizeScannerValue(value);
+        return products.find((p) => isExactScanMatch(term, p.sku, p.barcode)) ?? null;
+    }
+
+    function findBinByScan(value: string) {
+        const term = getScanFieldValue(value, "bin") || normalizeScannerValue(value);
+        if (!term) return null;
+        return bins.find((b) => isExactScanMatch(term, b.code)) ?? null;
+    }
+
+    async function findBinHitByScan(value: string) {
+        const term = getScanFieldValue(value, "bin") || normalizeScannerValue(value);
+        if (!term) return null;
+
+        const localBin = findBinByScan(value);
+        if (localBin && rackId) {
+            return {
+                ...localBin,
+                rackId,
+                zoneId,
+                warehouseId,
+            } as BinHitDto;
+        }
+
+        const results = await searchBins(term);
+        return results.find((b) => isExactScanMatch(value, b.code, b.name))
+            ?? results.find((b) => normalizeScannerValue(b.code).toLowerCase() === term.toLowerCase())
+            ?? results[0]
+            ?? null;
+    }
+
+    function applyBinLocation(bin: BinHitDto) {
+        setWarehouseId(bin.warehouseId);
+        setZoneId(bin.zoneId);
+        setRackId(bin.rackId);
+
+        if (bin.zoneCode || bin.zoneName) {
+            setZones((current) => current.some((z) => z.id === bin.zoneId)
+                ? current
+                : [{ id: bin.zoneId, code: bin.zoneCode ?? "", name: bin.zoneName ?? "" }, ...current]);
+        }
+
+        if (bin.rackCode || bin.rackName) {
+            setRacks((current) => current.some((r) => r.id === bin.rackId)
+                ? current
+                : [{ id: bin.rackId, code: bin.rackCode ?? "", name: bin.rackName ?? "" }, ...current]);
+        }
+
+        setBins((current) => current.some((b) => b.id === bin.id)
+            ? current
+            : [{ id: bin.id, code: bin.code, name: bin.name }, ...current]);
+    }
+
+    function setBinByScanTarget(bin: LookupDto | BinHitDto) {
+        if ("warehouseId" in bin) {
+            applyBinLocation(bin);
+        }
+
+        if (mode === "IN") {
+            setToBinId(bin.id);
+            setScanTarget("toBin");
+            setScanResultSuccess(`U vendos "Ne shporte": ${bin.code} - ${bin.name}`);
+            return;
+        }
+
+        if (mode === "OUT") {
+            setFromBinId(bin.id);
+            setScanTarget("fromBin");
+            setScanResultSuccess(`U vendos "Nga shporta": ${bin.code} - ${bin.name}`);
+            return;
+        }
+
+        if (mode === "ADJUST") {
+            setBinId(bin.id);
+            setScanTarget("bin");
+            setScanResultSuccess(`U vendos "Shporta": ${bin.code} - ${bin.name}`);
+            return;
+        }
+
+        if (scanTarget === "toBin" || (fromBinId && !toBinId)) {
+            setToBinId(bin.id);
+            setScanTarget("toBin");
+            setScanResultSuccess(`U vendos "Ne shporte": ${bin.code} - ${bin.name}`);
+            return;
+        }
+
+        setFromBinId(bin.id);
+        setScanTarget("fromBin");
+        setScanResultSuccess(`U vendos "Nga shporta": ${bin.code} - ${bin.name}`);
+    }
+
+    function setScanResultSuccess(message: string) {
+        setScanFeedback({ tone: "success", message });
+    }
+
+    function setScanResultError(message: string) {
+        setScanFeedback({ tone: "error", message });
+    }
+
+    async function applyScan(rawValue: string) {
+        const value = normalizeScannerValue(rawValue);
+        if (!value) return;
+
+        const parsedScan = parseScanPayload(rawValue);
+        const explicitProductScan = parsedScan.type === "product";
+        const explicitBinScan = parsedScan.type === "bin" || parsedScan.type === "location";
+
+        const product = !explicitBinScan ? findProductByScan(value) : null;
+        if (explicitProductScan || product) {
+            if (!product) {
+                setScanResultError(`Produkti nuk u gjet per kodin "${value}".`);
+                return;
+            }
+            setProductId(product.id);
+            setScanTarget("product");
+            setScanResultSuccess(`Produkti u vendos: ${product.sku} - ${product.name}`);
+            return;
+        }
+
+        const bin = await findBinHitByScan(value);
+        if (!bin) {
+            setScanResultError(`Nuk u gjet produkt ose shporte per kodin "${value}".`);
+            return;
+        }
+
+        setBinByScanTarget(bin);
+    }
+
     function resetForm() {
         setProductId("");
         setWarehouseId("");
@@ -315,13 +457,40 @@ export default function StockMovementPage() {
         setReference("");
         setNote("");
         setReason("");
+        setScanInput("");
+        setScanFeedback(null);
         setZones([]);
         setRacks([]);
         setBins([]);
     }
 
+    useEffect(() => {
+        if (!scanFeedback) return;
+        const timer = window.setTimeout(() => setScanFeedback(null), 2200);
+        return () => window.clearTimeout(timer);
+    }, [scanFeedback]);
+
+    useEffect(() => {
+        if (mode === "IN" && (scanTarget === "fromBin" || scanTarget === "bin")) setScanTarget("toBin");
+        if (mode === "OUT" && (scanTarget === "toBin" || scanTarget === "bin")) setScanTarget("fromBin");
+        if (mode === "TRANSFER" && scanTarget === "bin") setScanTarget("fromBin");
+        if (mode === "ADJUST" && (scanTarget === "fromBin" || scanTarget === "toBin")) setScanTarget("bin");
+    }, [mode, scanTarget]);
+
+    useScannerCapture({
+        enabled: allowDirectStockMove,
+        onScan: async (value) => {
+            await applyScan(value);
+        },
+    });
+
     async function onSubmit(e: React.FormEvent) {
         e.preventDefault();
+        if (!allowDirectStockMove) {
+            setErr("Vetem Admin mund te kryeje hyrje, dalje, transfer ose korrigjim direkt te stokut.");
+            return;
+        }
+
         setSubmitting(true);
         setErr("");
 
@@ -398,6 +567,7 @@ export default function StockMovementPage() {
     const quantityChangeNumber = parseWholeNumber(quantityChange);
 
     const canSubmit =
+        allowDirectStockMove &&
         !!productId &&
         (
             (mode === "IN" &&
@@ -428,7 +598,7 @@ export default function StockMovementPage() {
         <div style={{ display: "grid", gap: 16 }}>
             <PageIntro
                 title="Levizjet e stokut"
-                subtitle="Menaxho hyrjet, daljet, transfertat dhe korrigjimet nga nje panel i vetem operativ."
+                subtitle="Menaxho hyrjet, daljet, transferet dhe korrigjimet nga nje panel i vetem i punes."
             />
 
             {err && (
@@ -506,8 +676,97 @@ export default function StockMovementPage() {
                 </div>
             </SurfaceCard>
 
+            {allowDirectStockMove ? (
             <SurfaceCard>
                 <h3 style={sectionTitleStyle}>Veprime</h3>
+
+                <div
+                    style={{
+                        marginBottom: 16,
+                        border: "1px solid var(--border)",
+                        borderRadius: 14,
+                        padding: 12,
+                        background: "var(--panel-soft)",
+                    }}
+                >
+                    <div style={{ fontWeight: 700, marginBottom: 6 }}>PDA Scan</div>
+                    <div style={{ color: "var(--muted)", fontSize: 13, marginBottom: 10 }}>
+                        Skanoni produktin ose QR shporte; sistemi e dallon automatikisht tipin e kodit.
+                    </div>
+
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 10 }}>
+                        <span style={{ ...btnStyle, cursor: "default", opacity: 0.78 }}>
+                            Auto-detect aktiv
+                        </span>
+                        <button type="button" style={{ ...btnStyle, ...(scanTarget === "product" ? activeChipStyle : undefined) }} onClick={() => setScanTarget("product")}>
+                            Produkt
+                        </button>
+                        {(mode === "OUT" || mode === "TRANSFER") ? (
+                            <button type="button" style={{ ...btnStyle, ...(scanTarget === "fromBin" ? activeChipStyle : undefined) }} onClick={() => setScanTarget("fromBin")}>
+                                Nga shporta
+                            </button>
+                        ) : null}
+                        {(mode === "IN" || mode === "TRANSFER") ? (
+                            <button type="button" style={{ ...btnStyle, ...(scanTarget === "toBin" ? activeChipStyle : undefined) }} onClick={() => setScanTarget("toBin")}>
+                                Ne shporte
+                            </button>
+                        ) : null}
+                        {mode === "ADJUST" ? (
+                            <button type="button" style={{ ...btnStyle, ...(scanTarget === "bin" ? activeChipStyle : undefined) }} onClick={() => setScanTarget("bin")}>
+                                Shporta
+                            </button>
+                        ) : null}
+                    </div>
+
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                        <input
+                            value={scanInput}
+                            onChange={(e) => setScanInput(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                    e.preventDefault();
+                                    void applyScan(scanInput);
+                                    setScanInput("");
+                                }
+                            }}
+                            placeholder="Skano kodin dhe shtyp Enter"
+                            style={{ ...inputStyle, flex: "1 1 280px", minWidth: 220 }}
+                        />
+                        <button
+                            type="button"
+                            style={primaryBtn}
+                            onClick={() => {
+                                void applyScan(scanInput);
+                                setScanInput("");
+                            }}
+                        >
+                            Apliko Scan
+                        </button>
+                    </div>
+
+                    {scanFeedback ? (
+                        <div
+                            style={{
+                                marginTop: 10,
+                                borderRadius: 10,
+                                padding: "8px 10px",
+                                fontWeight: 700,
+                                fontSize: 13,
+                                border:
+                                    scanFeedback.tone === "success"
+                                        ? "1px solid rgba(34, 197, 94, 0.30)"
+                                        : "1px solid rgba(239, 68, 68, 0.34)",
+                                background:
+                                    scanFeedback.tone === "success"
+                                        ? "rgba(34, 197, 94, 0.10)"
+                                        : "rgba(239, 68, 68, 0.10)",
+                                color: "var(--text)",
+                            }}
+                        >
+                            {scanFeedback.message}
+                        </div>
+                    ) : null}
+                </div>
 
                 <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
                     {(["IN", "OUT", "TRANSFER", "ADJUST"] as ActionMode[]).map((x) => {
@@ -715,7 +974,7 @@ export default function StockMovementPage() {
                                     value={reference}
                                     onChange={(e) => setReference(e.target.value)}
                                     style={inputStyle}
-                                    placeholder="p.sh. Fature, dokument ose porosi"
+                                    placeholder="p.sh. Fatur, dokument ose porosi"
                                 />
                         </div>
 
@@ -758,6 +1017,14 @@ export default function StockMovementPage() {
                     </div>
                 </form>
             </SurfaceCard>
+            ) : (
+            <SurfaceCard>
+                <h3 style={sectionTitleStyle}>Veprimet direkte jane te kufizuara</h3>
+                <div style={{ color: "var(--muted)", lineHeight: 1.5 }}>
+                    Ky rol mund te shohe historikun e levizjeve te stokut. Hyrjet, daljet, transferet dhe korrigjimet direkte mund t'i kryeje vetem Admin.
+                </div>
+            </SurfaceCard>
+            )}
 
             <SurfaceCard padded={false}>
                 <div
@@ -874,6 +1141,11 @@ const primaryBtn: React.CSSProperties = {
     background: "var(--accent)",
     color: "#f8fbff",
     border: "1px solid color-mix(in srgb, var(--accent-strong) 70%, white)",
+};
+
+const activeChipStyle: React.CSSProperties = {
+    background: "color-mix(in srgb, var(--accent) 24%, transparent)",
+    border: "1px solid color-mix(in srgb, var(--accent) 58%, white)",
 };
 /*
 const ghostBtn: React.CSSProperties = {

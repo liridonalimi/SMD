@@ -1,8 +1,6 @@
 ﻿using System.Net.Http.Headers;
 using System.Text;
 
-static async Task Main()
-{
     // 1. Ndrysho këto 3 vlera:
     var baseUrl = "https://localhost:5079";
     var docId = "A0BFE263-F3E0-4080-80CC-FE0D77EFCD59";
@@ -35,6 +33,3 @@ static async Task Main()
     Console.WriteLine($"REQ-2: {results[1].status} | {results[1].body}");
 
     Console.WriteLine("Done.");
-}
-
-await Main();

@@ -310,6 +310,49 @@ public class DashboardService : IDashboardService
             .Take(6)
             .ToList();
 
+        var staleTaskCutoff = DateTime.UtcNow.AddHours(-24);
+        var activeTaskStatuses = new[] { WarehouseTaskStatus.Open, WarehouseTaskStatus.InProgress, WarehouseTaskStatus.Blocked };
+
+        var activeWarehouseTasks = await _db.WarehouseTasks
+            .AsNoTracking()
+            .Include(x => x.Product)
+            .Include(x => x.FromBin)
+            .Include(x => x.ToBin)
+            .Include(x => x.AssignedToUser)
+            .Where(x => activeTaskStatuses.Contains(x.Status))
+            .ToListAsync(ct);
+
+        var openWarehouseTasksCount = activeWarehouseTasks.Count;
+        var unassignedWarehouseTasksCount = activeWarehouseTasks.Count(x => x.AssignedToUserId == null);
+        var staleWarehouseTasksCount = activeWarehouseTasks.Count(x => x.CreatedAt <= staleTaskCutoff);
+
+        var warehouseTaskAlerts = activeWarehouseTasks
+            .OrderByDescending(x => x.AssignedToUserId == null)
+            .ThenByDescending(x => x.Status == WarehouseTaskStatus.Blocked)
+            .ThenByDescending(x => x.CreatedAt <= staleTaskCutoff)
+            .ThenBy(x => x.Status == WarehouseTaskStatus.InProgress ? 0 : 1)
+            .ThenBy(x => x.CreatedAt)
+            .Take(6)
+            .Select(x => new DashboardWarehouseTaskAlertItemDto
+            {
+                TaskId = x.Id,
+                TaskNo = x.TaskNo,
+                Type = x.Type.ToString(),
+                Status = x.Status.ToString(),
+                ProductCode = x.Product?.Sku,
+                ProductName = x.Product?.Name,
+                FromBinCode = x.FromBin?.Code,
+                ToBinCode = x.ToBin?.Code,
+                Quantity = x.Quantity,
+                AssignedToUsername = x.AssignedToUser?.Username,
+                Reference = x.Reference,
+                Note = x.Note,
+                CreatedAt = x.CreatedAt,
+                IsUnassigned = x.AssignedToUserId == null,
+                IsStale = x.CreatedAt <= staleTaskCutoff
+            })
+            .ToList();
+
         return new DashboardSummaryResponse
         {
             InboundTodayCount = inboundToday,
@@ -322,6 +365,9 @@ public class DashboardService : IDashboardService
             OutOfStockProductsCount = outOfStockProductsCount,
             LowStockProductsCount = lowStockProductsCount,
             UnpaidDocumentsCount = paymentAlerts.Count,
+            OpenWarehouseTasksCount = openWarehouseTasksCount,
+            UnassignedWarehouseTasksCount = unassignedWarehouseTasksCount,
+            StaleWarehouseTasksCount = staleWarehouseTasksCount,
             CustomerDebtTotal = customerBalanceRows.Sum(x => x.DocumentTotal - x.PaidTotal),
             SupplierPayableTotal = supplierBalanceRows.Sum(x => x.DocumentTotal - x.PaidTotal),
             LatestAuditLogs = auditLogs,
@@ -329,15 +375,16 @@ public class DashboardService : IDashboardService
             LowStockAlerts = lowStockAlerts,
             TopCustomerDebtors = topCustomerDebtors,
             TopSupplierPayables = topSupplierPayables,
-            PaymentAlerts = paymentAlerts
+            PaymentAlerts = paymentAlerts,
+            WarehouseTaskAlerts = warehouseTaskAlerts
         };
     }
 
     private static string ToPaymentStatus(decimal documentTotal, decimal paidTotal)
     {
         if (documentTotal <= 0) return "Pa vlere";
-        if (paidTotal <= 0) return "I papaguar";
-        if (paidTotal >= documentTotal) return "I paguar plotesisht";
-        return "I paguar pjeserisht";
+        if (paidTotal <= 0) return "i papaguar";
+        if (paidTotal >= documentTotal) return "i paguar plotesisht";
+        return "i paguar pjeserisht";
     }
 }

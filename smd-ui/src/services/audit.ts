@@ -27,15 +27,10 @@ function toQuery(params: AuditListParams) {
     //new
     qs.set("sort", normalizeSort(params.sort));
 
-    /*//tobe deprecated
-    if (params.page) qs.set("page", String(params.page));
-    if (params.pageSize) qs.set("pageSize", String(params.pageSize));
-    if (params.sort) qs.set("sort", params.sort);
-    */
     return qs.toString();
 }
 
-// NËSE API jep paged response (recommended)
+// Nese API jep paged response
 export type PagedAuditResponse = {
   items: AuditLogDto[];
   total: number;

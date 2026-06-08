@@ -13,6 +13,9 @@ public class DashboardSummaryResponse
     public int OutOfStockProductsCount { get; set; }
     public int LowStockProductsCount { get; set; }
     public int UnpaidDocumentsCount { get; set; }
+    public int OpenWarehouseTasksCount { get; set; }
+    public int UnassignedWarehouseTasksCount { get; set; }
+    public int StaleWarehouseTasksCount { get; set; }
     public decimal CustomerDebtTotal { get; set; }
     public decimal SupplierPayableTotal { get; set; }
 
@@ -22,6 +25,7 @@ public class DashboardSummaryResponse
     public List<DashboardPartnerBalanceAlertItemDto> TopCustomerDebtors { get; set; } = new();
     public List<DashboardPartnerBalanceAlertItemDto> TopSupplierPayables { get; set; } = new();
     public List<DashboardPaymentAlertItemDto> PaymentAlerts { get; set; } = new();
+    public List<DashboardWarehouseTaskAlertItemDto> WarehouseTaskAlerts { get; set; } = new();
 }
 
 public class AuditLogItemDto
@@ -78,4 +82,23 @@ public class DashboardPaymentAlertItemDto
     public decimal Balance { get; set; }
     public string PaymentStatus { get; set; } = "";
     public DateTime CreatedAt { get; set; }
+}
+
+public class DashboardWarehouseTaskAlertItemDto
+{
+    public Guid TaskId { get; set; }
+    public string TaskNo { get; set; } = "";
+    public string Type { get; set; } = "";
+    public string Status { get; set; } = "";
+    public string? ProductCode { get; set; }
+    public string? ProductName { get; set; }
+    public string? FromBinCode { get; set; }
+    public string? ToBinCode { get; set; }
+    public decimal? Quantity { get; set; }
+    public string? AssignedToUsername { get; set; }
+    public string? Reference { get; set; }
+    public string? Note { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public bool IsUnassigned { get; set; }
+    public bool IsStale { get; set; }
 }

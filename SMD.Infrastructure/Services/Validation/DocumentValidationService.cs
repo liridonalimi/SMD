@@ -24,16 +24,16 @@ namespace SMD.Infrastructure.Services.Validation
                 return (false, "Nuk ka nje ose me shume produkte ne rreshta.");
 
             if (lines.Any(l => !l.ToBinId.HasValue))
-                return (false, "Cdo produkt ne pranim duhet te kete shporte te zgjedhur.");
+                return (false, "Cdo produkt qe pranohet duhet te vendoset ne nje shporte te zgjedhur.");
 
             // Check Bin exists
             var binIds = lines.Select(l => l.ToBinId!.Value).Distinct().ToList();
             var existingBins = await _db.Bins.Where(b => binIds.Contains(b.Id)).Select(b => b.Id).ToListAsync();
             if (existingBins.Count != binIds.Count)
-                return (false, "Nje ose me shume lokacione (bins) ne rreshta nuk ekzistojne.");
+                return (false, "Nuk ekzistojne nje ose me shume shporta ne rreshta.");
 
             if (lines.Any(l => string.IsNullOrWhiteSpace(l.LotNumber)))
-                return (false, "Seria eshte e detyrueshme per cdo produkt ne pranim.");
+                return (false, "Seria e prodhimit eshte e detyrueshme per cdo produkt ne pranim.");
 
             if (lines.Any(l => string.IsNullOrWhiteSpace(l.BatchNumber)))
                 return (false, "Grupi i prodhimit eshte i detyrueshem per cdo produkt ne pranim.");
@@ -45,13 +45,13 @@ namespace SMD.Infrastructure.Services.Validation
                 return (false, "Skadenca nuk mund te jete ne te kaluaren.");
 
             if (lines.Any(l => !string.IsNullOrWhiteSpace(l.LotNumber) && l.LotNumber!.Trim().Length > 80))
-                return (false, "Seria nuk mund te kete me shume se 80 karaktere.");
+                return (false, "Seria e prodhimit nuk mund te kete me shume se 80 karaktere.");
 
             if (lines.Any(l => !string.IsNullOrWhiteSpace(l.BatchNumber) && l.BatchNumber!.Trim().Length > 80))
                 return (false, "Grupi i prodhimit nuk mund te kete me shume se 80 karaktere.");
 
             /*            
-            // Optional: no duplicates (Product + ToBin) Nese klienti kerkon qe cdo produkt ne shporte te jete vecmas i regjistruar
+            // shtes: no duplicates (Product + ToBin) Nese klienti kerkon qe cdo produkt ne shporte te jete vecmas i regjistruar
             var dup = lines.GroupBy(l => new { l.ProductId, l.ToBinId }).Any(g => g.Count() > 1);
             if (dup) return (false, "Ke rreshta te dyfishuara (i njejti Produkt + Shport). Bashkoji ne nje rresht.");
             */
@@ -79,16 +79,16 @@ namespace SMD.Infrastructure.Services.Validation
             var binIds = lines.Select(l => l.FromBinId).Distinct().ToList();
             var existingBins = await _db.Bins.Where(b => binIds.Contains(b.Id)).Select(b => b.Id).ToListAsync();
             if (existingBins.Count != binIds.Count)
-                return (false, "Nje ose me shume lokacione (bins) ne linja nuk ekzistojne.");
+                return (false, "Nuk ekzistojne nje ose me shume shporta ne rreshta.");
 
             if (lines.Any(l => !string.IsNullOrWhiteSpace(l.LotNumber) && l.LotNumber!.Trim().Length > 80))
-                return (false, "Seria nuk mund te kete me shume se 80 karaktere.");
+                return (false, "Seria e prodhimit nuk mund te kete me shume se 80 karaktere.");
 
             if (lines.Any(l => !string.IsNullOrWhiteSpace(l.BatchNumber) && l.BatchNumber!.Trim().Length > 80))
                 return (false, "Grupi i prodhimit nuk mund te kete me shume se 80 karaktere.");
 
             /*
-            // Optional: no duplicates (Product + FromBin)
+            // shtes: no duplicates (Product + FromBin)
             var dup = lines.GroupBy(l => new { l.ProductId, l.FromBinId }).Any(g => g.Count() > 1);
             if (dup) return (false, "Ke rreshta te dyfishuara (i njejti Produkt + Shport). Bashkoji ne nje rresht.");
             */
@@ -123,11 +123,11 @@ namespace SMD.Infrastructure.Services.Validation
                         i.ExpiryDate == r.ExpiryDate);
 
                 if (inv == null)
-                    return (false, "Nuk ka rresht ne inventar per kombinimin e zgjedhur te produktit, shportes dhe lotit.");
+                    return (false, "Nuk ka rresht ne inventar per kombinimin e zgjedhur te produktit, shportes dhe series se prodhimit.");
 
                 var available = inv.QtyOnHand - inv.QtyReserved + r.ReservedQty;
                 if (r.Qty > available)
-                    return (false, $"Sasia nuk mjafton per Product={r.ProductId} ne Bin={r.FromBinId}. Available={available}");
+                    return (false, $"Sasia nuk mjafton per Produktin={r.ProductId} ne Shporten={r.FromBinId}. Te disponueshme={available}");
             }
 
             return (true, null);

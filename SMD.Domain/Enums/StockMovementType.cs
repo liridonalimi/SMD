@@ -6,8 +6,8 @@ namespace SMD.Domain.Enums;
 
 public enum StockMovementType
 {
-    IN = 1,        // pranim
+    IN = 1,        // pranim, hyrje
     OUT = 2,       // dalje
     TRANSFER = 3,  // transfer brenda depos
-    ADJUST = 4     // korrigjim (audit i detyrueshëm)
+    ADJUST = 4     // korrigjim, ndryshim
 }

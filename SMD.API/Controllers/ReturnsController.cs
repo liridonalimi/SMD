@@ -51,29 +51,29 @@ public class ReturnsController : ControllerBase
     public async Task<IActionResult> CreateDraft([FromBody] CreateReturnDraftRequest req)
     {
         if (!Enum.IsDefined(typeof(ReturnDocumentType), req.Type))
-            return BadRequest("Lloji i kthimit nuk eshte valid.");
+            return BadRequest("Lloji i dokumentit te kthimit nuk eshte valid.");
 
         if (req.Type == ReturnDocumentType.CustomerReturn)
         {
             if (!req.CustomerId.HasValue)
-                return BadRequest("Kthimi nga klienti duhet te lidhet me klient.");
+                return BadRequest("Dokumenti i kthimit nga klienti duhet te lidhet me klient.");
 
             var customerExists = await _db.Customers.AnyAsync(x => x.Id == req.CustomerId.Value && x.IsActive);
             if (!customerExists) return BadRequest("Klienti i zgjedhur nuk ekziston ose nuk eshte aktiv.");
 
             if (req.SupplierId.HasValue)
-                return BadRequest("Kthimi nga klienti nuk mund te lidhet me furnizues.");
+                return BadRequest("Dokumenti i kthimit nga klienti nuk mund te lidhet me furnizues.");
         }
         else
         {
             if (!req.SupplierId.HasValue)
-                return BadRequest("Kthimi te furnizuesi duhet te lidhet me furnizues.");
+                return BadRequest("Dokumenti i kthimit te furnizuesi duhet te lidhet me furnizues.");
 
             var supplierExists = await _db.Suppliers.AnyAsync(x => x.Id == req.SupplierId.Value && x.IsActive);
             if (!supplierExists) return BadRequest("Furnizuesi i zgjedhur nuk ekziston ose nuk eshte aktiv.");
 
             if (req.CustomerId.HasValue)
-                return BadRequest("Kthimi te furnizuesi nuk mund te lidhet me klient.");
+                return BadRequest("Dokumenti i kthimit te furnizuesi nuk mund te lidhet me klient.");
         }
 
         var doc = new ReturnDocument
@@ -100,7 +100,7 @@ public class ReturnsController : ControllerBase
     public async Task<IActionResult> GetById(Guid id)
     {
         var doc = await LoadReturnDocumentAsync(id, asNoTracking: true);
-        return doc is null ? NotFound("Kthimi nuk u gjet.") : Ok(ToDetails(doc));
+        return doc is null ? NotFound("Dokumenti i kthimit nuk u gjet.") : Ok(ToDetails(doc));
     }
 
     [Authorize(Policy = "CanEditDocuments")]
@@ -119,8 +119,8 @@ public class ReturnsController : ControllerBase
             .Include(x => x.Lines)
             .FirstOrDefaultAsync(x => x.Id == id);
 
-        if (doc is null) return NotFound("Kthimi nuk u gjet.");
-        if (doc.Status != DocumentStatus.Draft) return BadRequest("Vetem kthimet draft mund te ndryshohen.");
+        if (doc is null) return NotFound("Dokumenti i kthimit nuk u gjet.");
+        if (doc.Status != DocumentStatus.Draft) return BadRequest("Vetem dokumentet e kthimit me status draft mund te ndryshohen.");
 
         var productExists = await _db.Products.AnyAsync(x => x.Id == req.ProductId && x.IsActive);
         if (!productExists) return NotFound("Produkti nuk u gjet ose nuk eshte aktiv.");
@@ -182,8 +182,8 @@ public class ReturnsController : ControllerBase
             .Include(x => x.Lines)
             .FirstOrDefaultAsync(x => x.Id == id);
 
-        if (doc is null) return NotFound("Kthimi nuk u gjet.");
-        if (doc.Status != DocumentStatus.Draft) return BadRequest("Vetem kthimet draft mund te ndryshohen.");
+        if (doc is null) return NotFound("Dokumenti i kthimit nuk u gjet.");
+        if (doc.Status != DocumentStatus.Draft) return BadRequest("Vetem dokumentet e kthimit me status draft mund te ndryshohen.");
 
         var line = doc.Lines.FirstOrDefault(x => x.Id == lineId);
         if (line is null) return NotFound("Rreshti nuk u gjet.");
@@ -210,10 +210,10 @@ public class ReturnsController : ControllerBase
                 .ThenInclude(x => x.Bin)
             .FirstOrDefaultAsync(x => x.Id == id);
 
-        if (doc is null) return NotFound("Kthimi nuk u gjet.");
+        if (doc is null) return NotFound("Dokumenti i kthimit nuk u gjet.");
         if (doc.Status == DocumentStatus.Confirmed) return Ok(ToDetails((await LoadReturnDocumentAsync(id, true))!));
-        if (doc.Status != DocumentStatus.Draft) return BadRequest("Vetem kthimet draft mund te konfirmohen.");
-        if (doc.Lines.Count == 0) return BadRequest("Kthimi duhet te kete se paku nje rresht.");
+        if (doc.Status != DocumentStatus.Draft) return BadRequest("Vetem dokumentet e kthimit me status draft mund te konfirmohen.");
+        if (doc.Lines.Count == 0) return BadRequest("Dokumenti i kthimit duhet te kete se paku nje rresht me produkt.");
 
         var decimalLine = doc.Lines.FirstOrDefault(x => x.Quantity != decimal.Truncate(x.Quantity));
         if (decimalLine is not null)
@@ -335,8 +335,8 @@ public class ReturnsController : ControllerBase
     public async Task<IActionResult> Cancel(Guid id)
     {
         var doc = await _db.ReturnDocuments.FirstOrDefaultAsync(x => x.Id == id);
-        if (doc is null) return NotFound("Kthimi nuk u gjet.");
-        if (doc.Status != DocumentStatus.Draft) return BadRequest("Vetem kthimet draft mund te anulohen.");
+        if (doc is null) return NotFound("Dokumenti i kthimit nuk u gjet.");
+        if (doc.Status != DocumentStatus.Draft) return BadRequest("Vetem dokumentet e kthimit me status draft mund te anulohen.");
 
         doc.Status = DocumentStatus.Cancelled;
         doc.UpdatedAt = DateTime.UtcNow;

@@ -4,6 +4,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import { addReturnLine, cancelReturn, confirmReturn, deleteReturnLine, getReturn } from "../../services/returns";
 import { searchProducts, type ProductHitDto } from "../../services/products";
 import { getSuggestedBins, searchBins, type BinHitDto, type SuggestedBinDto } from "../../services/bins";
+import { canApproveDocuments } from "../../shared/permissions";
+import { getSessionUser } from "../../shared/session";
 import type { DocumentStatus, OutboundPriceTier } from "../../types/documents";
 import type { ReturnDetails as ReturnDetailsDto, ReturnDocumentType } from "../../types/returns";
 
@@ -132,6 +134,8 @@ function renderHighlighted(text: string | undefined | null, term: string) {
 export default function ReturnDetails() {
   const { id } = useParams();
   const nav = useNavigate();
+  const me = getSessionUser();
+  const allowApproveDocuments = canApproveDocuments(me?.role);
   const [data, setData] = useState<ReturnDetailsDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -271,7 +275,7 @@ export default function ReturnDetails() {
 
     const expiryDateIso = parseDisplayDateToIso(expiryDate);
     if (expiryDateIso === undefined) {
-      setError("Skadenca duhet te jete ne formatin dd/mm/yyyy, p.sh. 06/06/2026.");
+      setError("Skadenca duhet te jete ne formatin dd/mm/vvvv, p.sh. 31/12/2026.");
       return;
     }
 
@@ -313,7 +317,7 @@ export default function ReturnDetails() {
   async function onConfirm() {
     if (!id || !data) return;
     if (data.lines.length === 0) {
-      setError("Kthimi nuk mund te konfirmohet pa rreshta.");
+      setError("Kthimi nuk mund te konfirmohet pa rreshta me produkte.");
       return;
     }
     setSaving(true);
@@ -377,12 +381,16 @@ export default function ReturnDetails() {
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             {isDraft ? (
               <>
+                {allowApproveDocuments ? (
                 <button type="button" onClick={onConfirm} disabled={saving || data.lines.length === 0} style={primaryButtonStyle}>
                   Konfirmo kthimin
                 </button>
+                ) : null}
+                {allowApproveDocuments ? (
                 <button type="button" onClick={onCancel} disabled={saving} style={dangerButtonStyle}>
                   Anulo
                 </button>
+                ) : null}
               </>
             ) : (
               <button type="button" onClick={() => void reload()} style={{ background: "var(--panel-soft)" }}>
@@ -423,7 +431,7 @@ export default function ReturnDetails() {
                   setSelectedProduct(null);
                   setProductTerm(e.target.value);
                 }}
-                placeholder="Kerko SKU, emer ose barcode"
+                placeholder="Kerko me SKU, emer ose barcode"
                 style={inputStyle}
               />
               {productHits.length > 0 ? (

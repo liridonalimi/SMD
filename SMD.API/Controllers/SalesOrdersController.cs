@@ -98,7 +98,7 @@ public class SalesOrdersController : ControllerBase
                         l.Product.VipPrice))).ToList()))
             .FirstOrDefaultAsync();
 
-        return order is null ? NotFound("Sales order nuk u gjet.") : Ok(order);
+        return order is null ? NotFound("Porosia e shitjes nuk u gjet.") : Ok(order);
     }
 
     [Authorize(Policy = "CanEditDocuments")]
@@ -132,17 +132,17 @@ public class SalesOrdersController : ControllerBase
     public async Task<IActionResult> AddLine(Guid id, [FromBody] AddSalesOrderLineRequest req)
     {
         var order = await _db.SalesOrders.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
-        if (order is null) return NotFound();
-        if (order.Status != OrderStatus.Draft) return BadRequest("Rreshtat mund te ndryshohen vetem ne Draft.");
+        if (order is null) return NotFound("Porosia e shitjes nuk u gjet.");
+        if (order.Status != OrderStatus.Draft) return BadRequest("Rreshtat mund te ndryshohen vetem ne porosi me status draft.");
         if (req.Quantity <= 0) return BadRequest("Sasia duhet te jete me e madhe se 0.");
         if (decimal.Truncate(req.Quantity) != req.Quantity) return BadRequest("Sasia duhet te jete numer i plote.");
 
         var inventory = await _db.Inventories
             .Include(x => x.Product)
             .FirstOrDefaultAsync(x => x.Id == req.InventoryId);
-        if (inventory is null) return BadRequest("Rreshti i inventarit nuk u gjet.");
+        if (inventory is null) return BadRequest("Produkti nuk u gjet ne inventar.");
         var available = inventory.QtyOnHand - inventory.QtyReserved;
-        if (available <= 0) return BadRequest("Ky rresht inventari nuk ka sasi te disponueshme per rezervim.");
+        if (available <= 0) return BadRequest("Ky produkt nuk ka sasi te disponueshme per rezervim.");
 
         var priceTier = order.PriceTier;
         if (req.PriceTier.HasValue && Enum.IsDefined(typeof(OutboundPriceTier), req.PriceTier.Value))
@@ -192,8 +192,8 @@ public class SalesOrdersController : ControllerBase
     public async Task<IActionResult> DeleteLine(Guid id, Guid lineId)
     {
         var order = await _db.SalesOrders.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
-        if (order is null) return NotFound();
-        if (order.Status != OrderStatus.Draft) return BadRequest("Rreshtat mund te fshihen vetem ne Draft.");
+        if (order is null) return NotFound("Porosia e shitjes nuk u gjet.");
+        if (order.Status != OrderStatus.Draft) return BadRequest("Rreshtat me produkte mund te fshihen vetem ne porosi me status draft.");
         var line = await _db.SalesOrderLines.FirstOrDefaultAsync(x => x.Id == lineId && x.SalesOrderId == id);
         if (line is null) return NotFound();
         _db.SalesOrderLines.Remove(line);
@@ -209,9 +209,9 @@ public class SalesOrdersController : ControllerBase
             .Include(x => x.Lines)
             .ThenInclude(x => x.Product)
             .FirstOrDefaultAsync(x => x.Id == id);
-        if (order is null) return NotFound();
-        if (order.Status != OrderStatus.Draft) return BadRequest("Vetem Draft mund te konfirmohet.");
-        if (!order.Lines.Any()) return BadRequest("Order-i duhet te kete se paku 1 rresht.");
+        if (order is null) return NotFound("Porosia e shitjes nuk u gjet.");
+        if (order.Status != OrderStatus.Draft) return BadRequest("Vetem porosit e shitjes me status draft mund te konfirmohet.");
+        if (!order.Lines.Any()) return BadRequest("Porosia e shitjes duhet te kete se paku 1 rresht me produkt.");
 
         await using var tx = await _db.Database.BeginTransactionAsync();
         foreach (var line in order.Lines)
@@ -220,7 +220,7 @@ public class SalesOrdersController : ControllerBase
             if (inventory is null)
             {
                 await tx.RollbackAsync();
-                return BadRequest("Mungon inventari per nje nga rreshtat.");
+                return BadRequest("Mungon sasi ne inventar per nje nga produktet ne rreshta.");
             }
             var available = inventory.QtyOnHand - inventory.QtyReserved;
             if (line.Quantity > available)
@@ -248,7 +248,7 @@ public class SalesOrdersController : ControllerBase
     {
         var order = await _db.SalesOrders.Include(x => x.Lines).FirstOrDefaultAsync(x => x.Id == id);
         if (order is null) return NotFound();
-        if (order.Status == OrderStatus.Fulfilled) return BadRequest("Order i kthyer ne dokument nuk mund te anulohet.");
+        if (order.Status == OrderStatus.Fulfilled) return BadRequest("Porosia e lidhur me nje dokument dales nuk mund te anulohet.");
         await using var tx = await _db.Database.BeginTransactionAsync();
         if (order.Status == OrderStatus.Confirmed)
         {
@@ -278,8 +278,8 @@ public class SalesOrdersController : ControllerBase
     {
         var order = await _db.SalesOrders.Include(x => x.Lines).FirstOrDefaultAsync(x => x.Id == id);
         if (order is null) return NotFound();
-        if (order.Status != OrderStatus.Confirmed) return BadRequest("Vetem porosi e shitjes e konfirmuar mund te kthehet ne dalje.");
-        if (order.OutboundDocumentId.HasValue) return Conflict("Ky order ka dokument dalje te krijuar.");
+        if (order.Status != OrderStatus.Confirmed) return BadRequest("Vetem porosia e shitjes e konfirmuar mund te lidhet me nje dokument ne dalje.");
+        if (order.OutboundDocumentId.HasValue) return Conflict("Kjo porosi eshte e lidhur me nje dokument ne dalje.");
 
         var outbound = new OutboundDocument
         {
@@ -288,7 +288,7 @@ public class SalesOrdersController : ControllerBase
             PriceTier = order.PriceTier,
             CustomerId = order.CustomerId,
             Reference = order.OrderNo,
-            Note = string.IsNullOrWhiteSpace(order.Note) ? "Krijuar nga porosi e shitjes" : order.Note
+            Note = string.IsNullOrWhiteSpace(order.Note) ? "Ndertuar nga porosia e shitjes" : order.Note
         };
 
         foreach (var line in order.Lines)

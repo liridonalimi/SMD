@@ -34,10 +34,9 @@ export function auditActionLabel(action: string) {
 }
 
 export function auditEntityLabel(entity: string) {
-    // nëse entity s’të vlen për klientin, mund ta thjeshtosh
     const e = (entity ?? "").trim().toLowerCase();
-    if (e.includes("inbound")) return "Pranim malli";
-    if (e.includes("outbound")) return "Dalje malli";
+    if (e.includes("inbound")) return "Hyrje";
+    if (e.includes("outbound")) return "Dalje";
     if (e.includes("inventory")) return "Inventar";
     if (e.includes("stock")) return "Stok";
 

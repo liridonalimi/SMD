@@ -4,6 +4,7 @@ import { login } from "../../services/auth";
 import { getToken } from "../../services/token";
 import { SurfaceCard } from "../../shared/ui/SurfaceCard";
 import { FieldLabel } from "../../shared/ui/FieldLabel";
+import smdBannerLogo from "../../assets/logo/smd-logo-banner-horizontal-transparent.png";
 
 export default function LoginPage() {
   const nav = useNavigate();
@@ -68,22 +69,17 @@ export default function LoginPage() {
           gap: 24,
         }}
       >
-        <div
+        <img
+          src={smdBannerLogo}
+          alt="SMD - Sistemi i Menaxhimit te Depove"
           style={{
-            display: "inline-flex",
-            width: "fit-content",
-            padding: "6px 12px",
-            borderRadius: 999,
-            background: "var(--panel-soft)",
-            border: "1px solid var(--border)",
-            color: "var(--muted-strong)",
-            fontSize: 12,
-            letterSpacing: "0.08em",
-            textTransform: "uppercase",
+            width: compact ? "min(100%, 430px)" : 560,
+            maxWidth: "100%",
+            height: "auto",
+            objectFit: "contain",
+            alignSelf: "flex-start",
           }}
-        >
-          ERP Depo
-        </div>
+        />
 
         <div style={{ maxWidth: 560 }}>
           <h1 style={{ fontSize: 52, lineHeight: 0.98, marginBottom: 14 }}>

@@ -57,6 +57,10 @@ export function productBarcodeLabelsPdfUrl(id: string, copies = 18) {
     return `/api/products/${id}/barcode-labels.pdf?copies=${copies}`;
 }
 
+export function productQrLabelsPdfUrl(id: string, copies = 18) {
+    return `/api/products/${id}/qr-labels.pdf?copies=${copies}`;
+}
+
 export function importProducts(file: File, updateExisting: boolean, signal?: AbortSignal) {
     const body = new FormData();
     body.append("file", file);

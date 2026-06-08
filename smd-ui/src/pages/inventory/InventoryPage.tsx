@@ -1,5 +1,5 @@
-﻿import { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { listInventory, getInventoryCharts, getInventoryExpiryReport, getInventorySummary, getInventoryStockAlerts, inventoryExcelUrl, inventoryReorderExcelUrl, } from "../../services/inventory";
 import type { InventoryExpiryFilter, InventoryExpiryItemDto, InventoryExpiryReportDto, InventoryListItemDto, InventoryProductStockAlertDto, InventorySortBy, InventoryStockAlertsDto, PagedInventoryResponse } from "../../types/inventory";
 import { errorMessage } from "../../shared/errors";
@@ -7,7 +7,7 @@ import { listWarehouses, listZones, listRacks, listBins, type LookupDto } from "
 import { downloadFile } from "../../services/download";
 import { PageIntro } from "../../shared/ui/PageIntro";
 import { SurfaceCard } from "../../shared/ui/SurfaceCard";
-import { isExactScanMatch, normalizeScannerValue } from "../../shared/scanner";
+import { getPreferredScanLookupTerm, isExactScanMatch, normalizeScannerValue } from "../../shared/scanner";
 
 function clamp(n: number, min: number, max: number) {
     return Math.max(min, Math.min(max, n));
@@ -43,6 +43,8 @@ function warehouseLabel(r: InventoryListItemDto) {
 }
 
 export default function InventoryPage() {
+    const [searchParams] = useSearchParams();
+    const initialWarehouseAppliedRef = useRef(false);
 
     const [warehouseId, setWarehouseId] = useState("");
     const [zoneId, setZoneId] = useState("");
@@ -93,6 +95,16 @@ export default function InventoryPage() {
         listWarehouses(ac.signal).then(setWarehouses).catch(() => { });
         return () => ac.abort();
     }, []);
+
+    useEffect(() => {
+        if (initialWarehouseAppliedRef.current) return;
+        if (warehouses.length === 0) return;
+        const queryWarehouseId = searchParams.get("warehouseId");
+        if (!queryWarehouseId) return;
+        const exists = warehouses.some((w) => w.id === queryWarehouseId);
+        if (exists) setWarehouseId(queryWarehouseId);
+        initialWarehouseAppliedRef.current = true;
+    }, [warehouses, searchParams]);
 
     useEffect(() => {
         const ac = new AbortController();
@@ -368,8 +380,9 @@ export default function InventoryPage() {
 
         setScannerValue("");
         setScannerPendingTerm(normalized);
-        setSearch(normalized);
-        setDebouncedSearch(normalized);
+        const lookupTerm = getPreferredScanLookupTerm(normalized);
+        setSearch(lookupTerm || normalized);
+        setDebouncedSearch(lookupTerm || normalized);
         setPage(1);
         window.setTimeout(() => {
             scannerInputRef.current?.focus();
@@ -1291,7 +1304,7 @@ export default function InventoryPage() {
                                 <th style={stickyThStyle}>Zona</th>
                                 <th style={stickyThStyle}>Rafti</th>
                                 <th style={{ ...stickyThStyle, cursor: "pointer" }} onClick={() => onSort("bin")}>Shporta</th>
-                                <th style={stickyThStyle}>Grumbulli / Seria / Skadenca</th>
+                                <th style={stickyThStyle}>Grupi / Seria / Skadenca</th>
                                 <th style={{ ...stickyThStyle, textAlign: "right" }}>Pragu min.</th>
                                 <th style={{ ...stickyThStyle, cursor: "pointer", textAlign: "right" }} onClick={() => onSort("qty")}>Ne depo</th>
                                 <th style={{ ...stickyThStyle, textAlign: "right" }}>E rezervuar</th>
@@ -1433,7 +1446,7 @@ export default function InventoryPage() {
                                         <td style={{ padding: 10, minWidth: 220 }}>
                                             <div style={{ display: "grid", gap: 6 }}>
                                                 <div style={{ fontSize: 12, opacity: 0.84 }}>
-                                                    Grumbulli: <b style={{ color: "var(--text)" }}>{r.lotNumber || "—"}</b>
+                                                    Grupi: <b style={{ color: "var(--text)" }}>{r.lotNumber || "—"}</b>
                                                 </div>
                                                 <div style={{ fontSize: 12, opacity: 0.84 }}>
                                                     Seria: <b style={{ color: "var(--text)" }}>{r.batchNumber || "—"}</b>
@@ -1442,9 +1455,9 @@ export default function InventoryPage() {
                                                     Skadenca: <b style={{ color: "var(--text)" }}>{formatDateOnly(r.expiryDate)}</b>
                                                 </div>
                                                 {r.isExpired ? (
-                                                    <span style={expiredChipStyle}>I skaduar</span>
+                                                    <span style={expiredChipStyle}>i skaduar</span>
                                                 ) : r.isNearExpiry ? (
-                                                    <span style={nearExpiryChipStyle}>Skadon shpejt</span>
+                                                    <span style={nearExpiryChipStyle}>Skadon se shpejt</span>
                                                 ) : null}
                                             </div>
                                         </td>

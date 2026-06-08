@@ -5,7 +5,7 @@ export default function SuppliersPage() {
   return (
     <PartnerDirectoryPage
       title="Furnizuesit"
-      subtitle="Regjistro dhe menaxho furnizuesit qe do lidhen me dokumentet inbound."
+      subtitle="Regjistro dhe menaxho furnizuesit."
       entityLabel="Furnizues"
       listItems={listSuppliers}
       createItem={createSupplier}

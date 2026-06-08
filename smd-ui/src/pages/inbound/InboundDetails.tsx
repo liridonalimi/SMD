@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Fragment, useRef } from "react";
 import type { InboundDetailsDto } from "../../types/documents";
@@ -16,7 +16,7 @@ import { inboundExcelUrl } from "../../services/inbound";
 import { PageIntro } from "../../shared/ui/PageIntro";
 import { SurfaceCard } from "../../shared/ui/SurfaceCard";
 import { FieldLabel } from "../../shared/ui/FieldLabel";
-import { isExactScanMatch } from "../../shared/scanner";
+import { getPreferredScanLookupTerm, isExactScanMatch } from "../../shared/scanner";
 import { useScannerCapture } from "../../shared/useScannerCapture";
 
 const LAST_BIN_BY_PRODUCT_KEY = "smd:last-bin-by-product";
@@ -699,7 +699,7 @@ export default function InboundDetails() {
     }
 
     async function handleScannerSubmit(rawTerm: string) {
-        const term = rawTerm.trim();
+        const term = getPreferredScanLookupTerm(rawTerm);
         if (!term) return false;
 
         try {

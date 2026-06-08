@@ -39,3 +39,7 @@ export function getSuggestedBins(productId: string, signal?: AbortSignal, q?: st
 
     return http<SuggestedBinDto[]>(`/api/bins/suggested?${qs.toString()}`, { signal });
 }
+
+export function binQrLabelsPdfUrl(id: string, copies = 1) {
+    return `/api/bins/${id}/qr-labels.pdf?copies=${Math.max(1, Math.trunc(copies || 1))}`;
+}

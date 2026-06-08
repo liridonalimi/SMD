@@ -33,7 +33,7 @@ public class ExportService : IExportService
             .FirstOrDefaultAsync(d => d.Id == id);
 
         if (doc == null)
-            throw new KeyNotFoundException("Inbound dokumenti nuk u gjet.");
+            throw new KeyNotFoundException("Dokumenti hyres/Inbound nuk u gjet.");
 
         var totalQty = doc.Lines.Sum(x => x.Quantity);
         var printedAt = DateTime.Now;
@@ -81,7 +81,7 @@ public class ExportService : IExportService
                         row.RelativeItem().Column(header =>
                         {
                             header.Item().Text("SMD").SemiBold().FontSize(11).FontColor(Colors.BlueGrey.Darken1);
-                            header.Item().PaddingTop(2).Text("Flete Pranimi Malli").SemiBold().FontSize(22);
+                            header.Item().PaddingTop(2).Text("Fletepranim").SemiBold().FontSize(22);
                             header.Item().PaddingTop(3).Text($"Dokumenti hyres • {doc.DocumentNo}")
                                 .FontSize(12).FontColor(Colors.Grey.Darken2);
                         });
@@ -110,7 +110,7 @@ public class ExportService : IExportService
                             });
                             meta.Item().Text(text =>
                             {
-                                text.Span("Shenimi: ").SemiBold();
+                                text.Span("Shenim: ").SemiBold();
                                 text.Span(string.IsNullOrWhiteSpace(doc.Note) ? "-" : doc.Note);
                             });
                         });
@@ -122,7 +122,7 @@ public class ExportService : IExportService
                             meta.Spacing(4);
                             meta.Item().Text(text =>
                             {
-                                text.Span("Data e krijimit: ").SemiBold();
+                                text.Span("Data e ndertimit: ").SemiBold();
                                 text.Span(doc.CreatedAt.ToString("dd.MM.yyyy HH:mm"));
                             });
                             meta.Item().Text(text =>
@@ -225,7 +225,7 @@ public class ExportService : IExportService
                     {
                         row.RelativeItem().Column(signature =>
                         {
-                            signature.Item().Text("Pranoi nga").SemiBold();
+                            signature.Item().Text("Pranoi").SemiBold();
                             signature.Item().PaddingTop(14).LineHorizontal(1).LineColor(Colors.Grey.Lighten1);
                         });
                         row.ConstantItem(24);
@@ -278,7 +278,7 @@ public class ExportService : IExportService
             .FirstOrDefaultAsync(d => d.Id == id);
 
         if (doc == null)
-            throw new KeyNotFoundException("Outbound dokumenti nuk u gjet.");
+            throw new KeyNotFoundException("Dokumenti dales/Outbound nuk u gjet.");
 
         var totalQty = doc.Lines.Sum(x => x.Quantity);
         var printedAt = DateTime.Now;
@@ -326,7 +326,7 @@ public class ExportService : IExportService
                         row.RelativeItem().Column(header =>
                         {
                             header.Item().Text("SMD").SemiBold().FontSize(11).FontColor(Colors.BlueGrey.Darken1);
-                            header.Item().PaddingTop(2).Text("Flete Dalese Malli").SemiBold().FontSize(22);
+                            header.Item().PaddingTop(2).Text("Fletedalese").SemiBold().FontSize(22);
                             header.Item().PaddingTop(3).Text($"Dokumenti dales • {doc.DocumentNo}")
                                 .FontSize(12).FontColor(Colors.Grey.Darken2);
                         });
@@ -367,7 +367,7 @@ public class ExportService : IExportService
                             meta.Spacing(4);
                             meta.Item().Text(text =>
                             {
-                                text.Span("Data e krijimit: ").SemiBold();
+                                text.Span("Data e ndertimit: ").SemiBold();
                                 text.Span(doc.CreatedAt.ToString("dd.MM.yyyy HH:mm"));
                             });
                             meta.Item().Text(text =>
@@ -470,7 +470,7 @@ public class ExportService : IExportService
                     {
                         row.RelativeItem().Column(signature =>
                         {
-                            signature.Item().Text("Pranoi nga").SemiBold();
+                            signature.Item().Text("Pranoi").SemiBold();
                             signature.Item().PaddingTop(14).LineHorizontal(1).LineColor(Colors.Grey.Lighten1);
                         });
                         row.ConstantItem(24);
@@ -523,7 +523,7 @@ public class ExportService : IExportService
             .FirstOrDefaultAsync(x => x.Id == id);
 
         if (doc == null)
-            throw new KeyNotFoundException("Dokumenti hyres (Inbound) nuk u gjet.");
+            throw new KeyNotFoundException("Dokumenti hyres nuk u gjet.");
 
         var totalQty = doc.Lines.Sum(x => x.Quantity);
         var statusText = doc.Status switch
@@ -538,7 +538,7 @@ public class ExportService : IExportService
         var ws = wb.Worksheets.Add("Inbound");
 
         ws.Cell("A1").Value = "SMD";
-        ws.Cell("A2").Value = "Flete Pranimi Malli";
+        ws.Cell("A2").Value = "Fletepranimi";
         ws.Cell("A3").Value = $"Dokumenti hyres • {doc.DocumentNo}";
 
         ws.Range("A1:H1").Merge();
@@ -549,11 +549,11 @@ public class ExportService : IExportService
         ws.Cell("B5").Value = doc.DocumentNo;
         ws.Cell("A6").Value = "Referenca";
         ws.Cell("B6").Value = string.IsNullOrWhiteSpace(doc.Reference) ? "-" : doc.Reference;
-        ws.Cell("A7").Value = "Shenimi";
+        ws.Cell("A7").Value = "Shenim";
         ws.Cell("B7").Value = string.IsNullOrWhiteSpace(doc.Note) ? "-" : doc.Note;
         ws.Cell("E5").Value = "Statusi i dokumentit";
         ws.Cell("F5").Value = statusText;
-        ws.Cell("E6").Value = "Data e krijimit";
+        ws.Cell("E6").Value = "Data e ndertimit";
         ws.Cell("F6").Value = doc.CreatedAt;
         ws.Cell("E7").Value = "Data e eksportit";
         ws.Cell("F7").Value = DateTime.Now;
@@ -618,7 +618,7 @@ public class ExportService : IExportService
         if (doc.Lines.Count == 0)
         {
             ws.Range("A11:H11").Merge();
-            ws.Cell("A11").Value = "Ky dokument nuk ka rreshta te regjistruar.";
+            ws.Cell("A11").Value = "Ky dokument nuk ka rreshta me produkte te regjistruar.";
             ws.Cell("A11").Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
             ws.Cell("A11").Style.Font.Italic = true;
             ws.Cell("A11").Style.Font.FontColor = XLColor.Gray;
@@ -704,7 +704,7 @@ public class ExportService : IExportService
         ws.PageSetup.SetRowsToRepeatAtTop(1, 10);
 
         ws.PageSetup.Header.Left.AddText("SMD");
-        ws.PageSetup.Header.Center.AddText("Flete Pranimi Malli");
+        ws.PageSetup.Header.Center.AddText("Fletepranim");
         ws.PageSetup.Footer.Center.AddText("Gjeneruar nga SMD");
         ws.PageSetup.Footer.Right.AddText("Faqe &[Page] / &[Pages]");
 
@@ -723,7 +723,7 @@ public class ExportService : IExportService
             .FirstOrDefaultAsync(x => x.Id == id);
 
         if (doc == null)
-            throw new KeyNotFoundException("Outbound document not found.");
+            throw new KeyNotFoundException("Dokumenti dales (outbound) nuk u gjet.");
 
         var totalQty = doc.Lines.Sum(x => x.Quantity);
         var statusText = doc.Status switch
@@ -738,7 +738,7 @@ public class ExportService : IExportService
         var ws = wb.Worksheets.Add("Outbound");
 
         ws.Cell("A1").Value = "SMD";
-        ws.Cell("A2").Value = "Flete Dalese Malli";
+        ws.Cell("A2").Value = "Fletedalese";
         ws.Cell("A3").Value = $"Dokumenti dales • {doc.DocumentNo}";
 
         ws.Range("A1:H1").Merge();
@@ -818,7 +818,7 @@ public class ExportService : IExportService
         if (doc.Lines.Count == 0)
         {
             ws.Range("A11:H11").Merge();
-            ws.Cell("A11").Value = "Ky dokument nuk ka rreshta te regjistruar.";
+            ws.Cell("A11").Value = "Ky dokument nuk ka rreshta me produkte te regjistruar.";
             ws.Cell("A11").Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
             ws.Cell("A11").Style.Font.Italic = true;
             ws.Cell("A11").Style.Font.FontColor = XLColor.Gray;
@@ -904,7 +904,7 @@ public class ExportService : IExportService
         ws.PageSetup.SetRowsToRepeatAtTop(1, 10);
 
         ws.PageSetup.Header.Left.AddText("SMD");
-        ws.PageSetup.Header.Center.AddText("Flete Dalese Malli");
+        ws.PageSetup.Header.Center.AddText("Fletedalese");
         ws.PageSetup.Footer.Center.AddText("Gjeneruar nga SMD");
         ws.PageSetup.Footer.Right.AddText("Faqe &[Page] / &[Pages]");
 
@@ -974,7 +974,7 @@ public class ExportService : IExportService
                 i.Bin.Rack.Zone.Warehouse.Code.ToLower().Contains(s) ||
                 i.Bin.Rack.Zone.Warehouse.Name.ToLower().Contains(s) ||
                 (i.Bin.Rack.Zone.Warehouse.Address != null &&
-                 i.Bin.Rack.Zone.Warehouse.Address.ToLower().Contains(s))
+                 (i.Bin.Rack.Zone.Warehouse.Address ?? "").ToLower().Contains(s))
             );
         }
 
@@ -1090,10 +1090,10 @@ public class ExportService : IExportService
         var stockFilterText = query.OnlyOutOfStock
             ? "Vetem produkte pa stok"
             : query.OnlyBelowMinStock
-                ? "Vetem nen prag minimal"
+                ? "Vetem produkte nen prag minimal"
                 : query.OnlyInStock
                     ? "Vetem produkte me stok"
-                    : "Te gjitha gjendjet";
+                    : "Te gjitha";
         var locationParts = new[] { filterWarehouseCode, filterZoneCode, filterRackCode, filterBinCode }
             .Where(x => !string.IsNullOrWhiteSpace(x))
             .ToList();
@@ -1107,7 +1107,7 @@ public class ExportService : IExportService
         const int columnCount = 14;
 
         ws.Cell("A1").Value = "SMD";
-        ws.Cell("A2").Value = "Raporti i Inventarit";
+        ws.Cell("A2").Value = "Raporti i Inventarit te depos";
         ws.Cell("A3").Value = "Gjendja aktuale e stokut ne depo";
 
         ws.Range(1, 1, 1, columnCount).Merge();
@@ -1226,7 +1226,7 @@ public class ExportService : IExportService
         ws.Cell(row + 4, 2).Value = totalQtyAvailable;
         ws.Cell(row + 5, 1).Value = "Produkte pa stok";
         ws.Cell(row + 5, 2).Value = outOfStockCount;
-        ws.Cell(row + 6, 1).Value = "Produkte nen prag";
+        ws.Cell(row + 6, 1).Value = "Produkte nen prag minimal";
         ws.Cell(row + 6, 2).Value = lowStockCount;
 
         var summaryRange = ws.Range(row + 1, 1, row + 6, 2);
@@ -1292,7 +1292,7 @@ public class ExportService : IExportService
         ws.PageSetup.SetRowsToRepeatAtTop(1, tableHeaderRow);
 
         ws.PageSetup.Header.Left.AddText("SMD");
-        ws.PageSetup.Header.Center.AddText("Raporti i Inventarit");
+        ws.PageSetup.Header.Center.AddText("Raporti i Inventarit te depos");
         ws.PageSetup.Footer.Center.AddText("Gjeneruar nga SMD");
         ws.PageSetup.Footer.Right.AddText("Faqe &[Page] / &[Pages]");
 
@@ -1330,7 +1330,7 @@ public class ExportService : IExportService
         var config = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture)
         {
             HasHeaderRecord = true,
-            Delimiter = ";" // për Excel DE (Gjermani) rekomandohet ;
+            Delimiter = ";"
         };
 
         using (var csv = new CsvWriter(writer, config))

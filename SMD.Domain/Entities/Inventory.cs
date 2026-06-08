@@ -14,6 +14,6 @@ public class Inventory : BaseEntity
     public string? BatchNumber { get; set; }
     public DateTime? ExpiryDate { get; set; }
 
-    public decimal QtyOnHand { get; set; } = 0;   // sasia fizike
+    public decimal QtyOnHand { get; set; } = 0;   // sasia aktuale ne depo
     public decimal QtyReserved { get; set; } = 0; // sasia e rezervuar
 }

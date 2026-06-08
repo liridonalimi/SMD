@@ -7,12 +7,6 @@ namespace SMD.Infrastructure.Security
 {
     public static class PasswordHasher
     {
-     /*   public static string Hash(string password)
-            => BCrypt.Net.BCrypt.HashPassword(password);
-
-        public static bool Verify(string password, string hash)
-            => BCrypt.Net.BCrypt.Verify(password, hash);
-     */
         public static string Hash(string password)
         {
             return BCrypt.Net.BCrypt.HashPassword(password);
@@ -20,7 +14,23 @@ namespace SMD.Infrastructure.Security
 
         public static bool Verify(string password, string hash)
         {
-            return BCrypt.Net.BCrypt.Verify(password, hash);
+            if (string.IsNullOrWhiteSpace(hash))
+            {
+                return false;
+            }
+
+            try
+            {
+                return BCrypt.Net.BCrypt.Verify(password, hash);
+            }
+            catch (SaltParseException)
+            {
+                return false;
+            }
+            catch (HashInformationException)
+            {
+                return false;
+            }
         }
     }
 }

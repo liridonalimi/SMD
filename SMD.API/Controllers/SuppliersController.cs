@@ -150,12 +150,11 @@ public class SuppliersController : ControllerBase
             return BadRequest("Kodi dhe emri jane te detyrueshem.");
 
         if (await _db.Suppliers.AnyAsync(x => x.Code == code && x.Id != id))
-            return Conflict("Ekziston furnitor tjeter me kete kod.");
+            return Conflict("Ekziston furnizues tjeter me kete kod.");
 
         var email = Normalize(emailRaw);
         if (email is not null && await _db.Suppliers.AnyAsync(x => x.Email == email && x.Id != id))
-            return Conflict("Ekziston furnitor tjeter me kete email.");
-
+            return Conflict("Ekziston furnizues tjeter me kete email.");
         return null;
     }
 

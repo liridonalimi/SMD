@@ -122,7 +122,7 @@ export default function ReturnsList() {
       });
       nav(`/returns/${created.id}`);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Kthimi nuk u krijua.");
+      setError(e instanceof Error ? e.message : "Kthimi nuk u ndertua.");
     } finally {
       setCreating(false);
     }
@@ -185,7 +185,7 @@ export default function ReturnsList() {
             </label>
 
             <button type="button" onClick={onCreate} disabled={creating || !partnerId} style={primaryButtonStyle}>
-              {creating ? "Duke krijuar..." : "Krijo kthimin"}
+              {creating ? "Duke ndertuar..." : "Nderto kthimin"}
             </button>
           </div>
         </div>

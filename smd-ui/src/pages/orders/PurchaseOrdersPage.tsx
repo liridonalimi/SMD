@@ -16,6 +16,8 @@ import { errorMessage } from "../../shared/errors";
 import { orderStatusLabel } from "../../shared/orderLabels";
 import { PageIntro } from "../../shared/ui/PageIntro";
 import { SurfaceCard } from "../../shared/ui/SurfaceCard";
+import { canApproveDocuments } from "../../shared/permissions";
+import { getSessionUser } from "../../shared/session";
 import type { OrderListItem, PurchaseOrderDetails } from "../../types/orders";
 import type { ProductRecordDto } from "../../types/products";
 import type { PartnerLookupDto } from "../../types/partners";
@@ -98,7 +100,7 @@ const statusFilterOptions = [
   { value: "Draft", label: "Draft" },
   { value: "Cancelled", label: "Anuluar" },
   { value: "Confirmed", label: "Konfirmuar" },
-  { value: "Fulfilled", label: "Kthyer ne dokument" },
+  { value: "Fulfilled", label: "Lidhur me dokument" },
 ];
 const orderPageSize = 5;
 
@@ -120,6 +122,8 @@ function toIsoDate(value: string) {
 
 export default function PurchaseOrdersPage() {
   const nav = useNavigate();
+  const me = getSessionUser();
+  const allowApproveDocuments = canApproveDocuments(me?.role);
   const [orders, setOrders] = useState<OrderListItem[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [details, setDetails] = useState<PurchaseOrderDetails | null>(null);
@@ -238,7 +242,7 @@ export default function PurchaseOrdersPage() {
 
   return (
     <div style={{ display: "grid", gap: 18 }}>
-      <PageIntro title="Porosite e blerjes" subtitle="Krijo porosi te furnizuesit, konfirmoje dhe ktheje ne dokument pranim kur malli arrin." />
+      <PageIntro title="Porosite e blerjes" subtitle="Nderto porosi per furnizuesit, konfirmoje dhe ktheje ne dokument pranim kur malli arrin." />
 
       {err ? <div style={{ padding: 12, borderRadius: 12, background: "rgba(248,113,113,0.12)", color: "#fecaca" }}>{err}</div> : null}
 
@@ -256,7 +260,7 @@ export default function PurchaseOrdersPage() {
                   <option key={option.value || "all"} value={option.value}>{option.label}</option>
                 ))}
               </select>
-              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Kerko PB, reference ose furnizues" style={inputStyle} />
+              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Kerko PB, referenc ose furnizues" style={inputStyle} />
             </div>
           </div>
           <div
@@ -351,12 +355,12 @@ export default function PurchaseOrdersPage() {
             <button
               type="button"
               disabled={busy}
-              title={!canCreateOrder ? "Ploteso daten e pritshme." : undefined}
+              title={!canCreateOrder ? "Ploteso daten." : undefined}
               style={buttonStyle}
               onClick={() => {
                 if (!canCreateOrder) {
                   setShowDateRequired(true);
-                  setErr("Ploteso daten para se ta krijosh porosine e blerjes.");
+                  setErr("Ploteso daten para se ta ndertosh porosine e blerjes.");
                   return;
                 }
 
@@ -388,12 +392,12 @@ export default function PurchaseOrdersPage() {
               <div style={{ color: "var(--muted-strong)", marginTop: 4 }}>{details.supplierName ?? "Pa furnizues"} {details.inboundDocumentId ? "| Ka pranim te krijuar" : ""}</div>
             </div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              {details.status === "Draft" ? <button disabled={busy} style={buttonStyle} onClick={() => run(() => confirmPurchaseOrder(details.id))}>Konfirmo</button> : null}
+              {details.status === "Draft" && allowApproveDocuments ? <button disabled={busy} style={buttonStyle} onClick={() => run(() => confirmPurchaseOrder(details.id))}>Konfirmo</button> : null}
               {details.status === "Confirmed" ? <button disabled={busy} style={buttonStyle} onClick={() => run(async () => {
                 const doc = await createInboundFromPurchaseOrder(details.id);
                 nav(`/inbound/${doc.id}`);
               })}>Krijo pranim</button> : null}
-              {details.status !== "Fulfilled" && details.status !== "Cancelled" ? <button disabled={busy} style={buttonStyle} onClick={() => run(() => cancelPurchaseOrder(details.id))}>Anulo</button> : null}
+              {details.status !== "Fulfilled" && details.status !== "Cancelled" && allowApproveDocuments ? <button disabled={busy} style={buttonStyle} onClick={() => run(() => cancelPurchaseOrder(details.id))}>Anulo</button> : null}
             </div>
           </div>
 

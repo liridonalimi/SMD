@@ -10,6 +10,11 @@ namespace SMD.Domain.Entities
         public string Code { get; set; } = null!;   // p.sh. Depo-001
         public string Name { get; set; } = null!;   // p.sh. Depo Kryesore
         public string? Address { get; set; }
+        public string? City { get; set; }
+        public decimal? Latitude { get; set; }
+        public decimal? Longitude { get; set; }
+        public TimeSpan? CutoffTime { get; set; }
+        public int? DailyOrderCapacity { get; set; }
         public bool IsActive { get; set; } = true;
     }
 }

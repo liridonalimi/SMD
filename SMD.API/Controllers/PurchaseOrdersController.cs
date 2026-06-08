@@ -85,7 +85,7 @@ public class PurchaseOrdersController : ControllerBase
                     l.Quantity * l.UnitPrice)).ToList()))
             .FirstOrDefaultAsync();
 
-        return order is null ? NotFound("Purchase order nuk u gjet.") : Ok(order);
+        return order is null ? NotFound("Porosia e blerjes nuk u gjet.") : Ok(order);
     }
 
     [Authorize(Policy = "CanEditDocuments")]
@@ -93,7 +93,7 @@ public class PurchaseOrdersController : ControllerBase
     public async Task<IActionResult> Create([FromBody] CreatePurchaseOrderRequest req)
     {
         if (!req.ExpectedDate.HasValue)
-            return BadRequest("Data e pritshme eshte e detyrueshme.");
+            return BadRequest("Data eshte e detyrueshme.");
 
         if (req.SupplierId.HasValue && !await _db.Suppliers.AnyAsync(x => x.Id == req.SupplierId.Value && x.IsActive))
             return BadRequest("Furnizuesi nuk ekziston ose nuk eshte aktiv.");
@@ -169,7 +169,7 @@ public class PurchaseOrdersController : ControllerBase
         var order = await _db.PurchaseOrders.Include(x => x.Lines).FirstOrDefaultAsync(x => x.Id == id);
         if (order is null) return NotFound();
         if (order.Status != OrderStatus.Draft) return BadRequest("Vetem Draft mund te konfirmohet.");
-        if (!order.Lines.Any()) return BadRequest("Order-i duhet te kete se paku 1 rresht.");
+        if (!order.Lines.Any()) return BadRequest("Porosia duhet te kete se paku 1 rresht me produkt.");
         order.Status = OrderStatus.Confirmed;
         order.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
@@ -185,7 +185,7 @@ public class PurchaseOrdersController : ControllerBase
             .Include(x => x.Lines)
             .FirstOrDefaultAsync(x => x.Id == id);
         if (order is null) return NotFound();
-        if (order.Status == OrderStatus.Fulfilled) return BadRequest("Order i kthyer ne dokument nuk mund te anulohet.");
+        if (order.Status == OrderStatus.Fulfilled) return BadRequest("Porosia e lidhur me nje dokument hyres nuk mund te anulohet.");
         order.Status = OrderStatus.Cancelled;
         order.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
@@ -201,8 +201,8 @@ public class PurchaseOrdersController : ControllerBase
             .Include(x => x.Lines)
             .FirstOrDefaultAsync(x => x.Id == id);
         if (order is null) return NotFound();
-        if (order.Status != OrderStatus.Confirmed) return BadRequest("Vetem porosi e blerjes e konfirmuar mund te kthehet ne pranim.");
-        if (order.InboundDocumentId.HasValue) return Conflict("Ky order ka dokument pranim te krijuar.");
+        if (order.Status != OrderStatus.Confirmed) return BadRequest("Vetem porosia e blerjes e konfirmuar mund te lidhet me nje dokument hyres/pranimi.");
+        if (order.InboundDocumentId.HasValue) return Conflict("Kjo porosi eshte e lidhur me nje dokument hyres/pranimi.");
 
         var inbound = new InboundDocument
         {
@@ -210,7 +210,7 @@ public class PurchaseOrdersController : ControllerBase
             Status = DocumentStatus.Draft,
             SupplierId = order.SupplierId,
             Reference = order.OrderNo,
-            Note = string.IsNullOrWhiteSpace(order.Note) ? "Krijuar nga porosi e blerjes" : order.Note
+            Note = string.IsNullOrWhiteSpace(order.Note) ? "Ndertuar nga porosi e blerjes" : order.Note
         };
 
         foreach (var line in order.Lines)

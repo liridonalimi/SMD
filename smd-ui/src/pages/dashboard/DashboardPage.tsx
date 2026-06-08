@@ -38,6 +38,35 @@ function formatQty(value: number) {
   return new Intl.NumberFormat("sq-AL", { maximumFractionDigits: 0 }).format(value ?? 0);
 }
 
+function taskTypeLabel(type: string) {
+  if (type === "Putaway") return "Vendos mallin";
+  if (type === "Replenishment") return "Mbush shporten";
+  if (type === "Picking") return "Mblidh porosine";
+  if (type === "Counting") return "Numero stokun";
+  return type;
+}
+
+function taskStatusLabel(status: string) {
+  if (status === "Open") return "E hapur";
+  if (status === "InProgress") return "Duke u punuar";
+  if (status === "Blocked") return "Ka problem";
+  if (status === "Done") return "E perfunduar";
+  if (status === "Cancelled") return "E anuluar";
+  return status;
+}
+
+function elapsedLabel(dtIso: string) {
+  const created = new Date(dtIso).getTime();
+  if (Number.isNaN(created)) return "";
+
+  const hours = Math.max(0, Math.floor((Date.now() - created) / 36e5));
+  if (hours < 1) return "me pak se 1 ore";
+  if (hours < 24) return `${hours} ore`;
+
+  const days = Math.floor(hours / 24);
+  return `${days} dite`;
+}
+
 function metricTone(index: number) {
   const tones = [
     "linear-gradient(135deg, rgba(37,99,235,0.22), rgba(15,23,42,0.04))",
@@ -114,6 +143,124 @@ const alertRowStyle: React.CSSProperties = {
   display: "grid",
   gap: 7,
 };
+
+function TaskInfo({ label, value }: { label: string; value: string }) {
+  return (
+    <div
+      style={{
+        padding: "8px 10px",
+        borderRadius: 10,
+        background: "rgba(255,255,255,0.035)",
+        border: "1px solid rgba(255,255,255,0.055)",
+        minWidth: 0,
+      }}
+    >
+      <div style={{ color: "var(--muted)", fontSize: 11, fontWeight: 800, textTransform: "uppercase" }}>{label}</div>
+      <div style={{ color: "var(--text)", fontWeight: 800, marginTop: 3, overflowWrap: "anywhere" }}>{value}</div>
+    </div>
+  );
+}
+
+function WarehouseTaskFollowUp({ data }: { data: DashboardSummary | null }) {
+  return (
+    <div
+      style={{
+        display: "grid",
+        gap: 12,
+        padding: 14,
+        borderRadius: 16,
+        background: "linear-gradient(180deg, rgba(217,119,6,0.12), rgba(255,255,255,0.02))",
+        border: "1px solid rgba(251, 191, 36, 0.22)",
+      }}
+    >
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start", flexWrap: "wrap" }}>
+        <div>
+          <div style={{ color: "#fde68a", fontSize: 12, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+            Prioritet per depo
+          </div>
+          <h3 style={{ margin: "4px 0 0", fontSize: 22 }}>Cka duhet me u kry ne depo</h3>
+          <div style={{ color: "var(--muted-strong)", fontSize: 13, marginTop: 5 }}>
+            Punet pa punetor ose te mbetura gjate dalin te parat.
+          </div>
+        </div>
+        <Link to="/warehouse-tasks" style={{ color: "var(--accent)", textDecoration: "none", fontWeight: 800 }}>
+          Hap listen e puneve
+        </Link>
+      </div>
+
+      {data?.warehouseTaskAlerts?.length ? (
+        <div style={{ display: "grid", gap: 10 }}>
+          {data.warehouseTaskAlerts.map((item) => (
+            <Link
+              key={item.taskId}
+              to="/warehouse-tasks"
+              style={{
+                ...alertRowStyle,
+                padding: 14,
+                borderColor: item.isUnassigned || item.isStale ? "rgba(251, 191, 36, 0.34)" : "var(--border)",
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start", flexWrap: "wrap" }}>
+                <div>
+                  <div style={{ color: "var(--muted)", fontSize: 12, fontWeight: 800, textTransform: "uppercase" }}>
+                    {item.taskNo}
+                  </div>
+                  <div style={{ fontWeight: 900, fontSize: 18, marginTop: 3 }}>{taskTypeLabel(item.type)}</div>
+                  <div style={{ color: "var(--muted-strong)", fontSize: 13, marginTop: 6 }}>
+                    Produkti: <b>{item.productCode ? `${item.productCode} - ${item.productName ?? ""}` : "Pa produkt"}</b>
+                  </div>
+                </div>
+                <div
+                  style={{
+                    ...alertChipStyle(item.status === "Blocked" ? "danger" : item.isUnassigned || item.isStale ? "warn" : "info"),
+                    padding: "7px 11px",
+                    borderRadius: 999,
+                    fontSize: 12,
+                    fontWeight: 900,
+                  }}
+                >
+                  {item.status === "Blocked" ? "Ka problem" : item.isUnassigned ? "Pa punetor" : taskStatusLabel(item.status)}
+                </div>
+              </div>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+                  gap: 8,
+                  color: "var(--muted-strong)",
+                  fontSize: 13,
+                }}
+              >
+                {item.quantity ? <TaskInfo label="Sasia" value={formatQty(item.quantity)} /> : null}
+                {item.fromBinCode ? <TaskInfo label="Nga shporta" value={item.fromBinCode} /> : null}
+                {item.toBinCode ? <TaskInfo label="Ne shporte" value={item.toBinCode} /> : null}
+                {item.reference ? <TaskInfo label="Dokumenti" value={item.reference} /> : null}
+                <TaskInfo label="Hapur para" value={elapsedLabel(item.createdAt)} />
+              </div>
+              {item.status === "Blocked" && item.note ? (
+                <div
+                  style={{
+                    padding: 10,
+                    borderRadius: 10,
+                    border: "1px solid rgba(248,113,113,0.34)",
+                    background: "rgba(127,29,29,0.22)",
+                    color: "#fecaca",
+                    fontSize: 13,
+                    fontWeight: 800,
+                  }}
+                >
+                  Arsyeja: {item.note}
+                </div>
+              ) : null}
+            </Link>
+          ))}
+        </div>
+      ) : (
+        <div style={{ ...alertRowStyle, opacity: 0.82 }}>Per momentin nuk ka pune te hapura ne depo.</div>
+      )}
+    </div>
+  );
+}
 
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardSummary | null>(null);
@@ -204,6 +351,13 @@ export default function DashboardPage() {
         hint: "Dokumente te konfirmuara me balance te hapur.",
         kind: "info" as const,
         to: "/finance",
+      },
+      {
+        title: "Pune aktive ne depo",
+        value: data?.openWarehouseTasksCount ?? 0,
+        hint: `${data?.unassignedWarehouseTasksCount ?? 0} pa punetor, ${data?.staleWarehouseTasksCount ?? 0} te hapura mbi 24 ore.`,
+        kind: (data?.unassignedWarehouseTasksCount ?? 0) > 0 || (data?.staleWarehouseTasksCount ?? 0) > 0 ? "warn" as const : "info" as const,
+        to: "/warehouse-tasks",
       },
       {
         title: "Borxhi i klienteve",
@@ -400,6 +554,8 @@ export default function DashboardPage() {
                 </Link>
               ))}
             </div>
+
+            <WarehouseTaskFollowUp data={data} />
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 300px), 1fr))", gap: 14 }}>
               <div style={{ display: "grid", gap: 12 }}>

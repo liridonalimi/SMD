@@ -5,6 +5,8 @@ import { cancelCycleCount, completeCycleCount, getCycleCount, updateCycleCountLi
 import type { CycleCountDetailDto, CycleCountLineDto, CycleCountStatus } from "../../types/cycleCounts";
 import { isExactScanMatch, normalizeScannerValue } from "../../shared/scanner";
 import { useScannerCapture } from "../../shared/useScannerCapture";
+import { canApproveDocuments } from "../../shared/permissions";
+import { getSessionUser } from "../../shared/session";
 
 const panelStyle: CSSProperties = {
   border: "1px solid var(--border)",
@@ -98,6 +100,8 @@ function scanFeedbackStyle(tone: "success" | "warn" | "error"): CSSProperties {
 export default function CycleCountDetails() {
   const { id } = useParams();
   const nav = useNavigate();
+  const me = getSessionUser();
+  const allowApproveDocuments = canApproveDocuments(me?.role);
   const [data, setData] = useState<CycleCountDetailDto | null>(null);
   const [draftQty, setDraftQty] = useState<Record<string, string>>({});
   const [draftNote, setDraftNote] = useState<Record<string, string>>({});
@@ -400,12 +404,16 @@ export default function CycleCountDetails() {
                 <button type="button" onClick={saveAllChanged} disabled={saving || changedLines.length === 0} style={{ background: "var(--panel-soft)" }}>
                   Ruaj ndryshimet ({changedLines.length})
                 </button>
+                {allowApproveDocuments ? (
                 <button type="button" onClick={onComplete} disabled={saving || !allDraftLinesHaveQty} style={primaryButtonStyle}>
                   Perfundo numerimin
                 </button>
+                ) : null}
+                {allowApproveDocuments ? (
                 <button type="button" onClick={onCancel} disabled={saving} style={dangerButtonStyle}>
                   Anulo
                 </button>
+                ) : null}
               </>
             ) : (
               <button type="button" onClick={reload} style={{ background: "var(--panel-soft)" }}>

@@ -3,6 +3,8 @@ import { errorMessage } from "../../shared/errors";
 import { ImportPanel } from "../../shared/ImportPanel";
 import { PageIntro } from "../../shared/ui/PageIntro";
 import { SurfaceCard } from "../../shared/ui/SurfaceCard";
+import { canEditMasterData } from "../../shared/permissions";
+import { getSessionUser } from "../../shared/session";
 import type { ImportResult } from "../../types/import";
 import type { PartnerRecordDto, UpsertPartnerDto } from "../../types/partners";
 
@@ -36,6 +38,8 @@ const buttonStyle: React.CSSProperties = {
 
 export default function PartnerDirectoryPage(props: Props) {
   const { title, subtitle, entityLabel, listItems, createItem, updateItem } = props;
+  const me = getSessionUser();
+  const allowEditMasterData = canEditMasterData(me?.role);
   const [items, setItems] = useState<PartnerRecordDto[]>([]);
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -116,6 +120,12 @@ export default function PartnerDirectoryPage(props: Props) {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setErr(null);
+
+    if (!allowEditMasterData) {
+      setErr(`Nuk keni te drejte te ndryshoni ${entityLabel.toLowerCase()}t.`);
+      return;
+    }
+
     setSaving(true);
 
     const payload: UpsertPartnerDto = {
@@ -190,6 +200,7 @@ export default function PartnerDirectoryPage(props: Props) {
         </SurfaceCard>
 
         <SurfaceCard>
+          {allowEditMasterData ? (
           <form onSubmit={onSubmit} style={{ display: "grid", gap: 12 }}>
             <div style={{ fontSize: 18, fontWeight: 800 }}>
               {selectedId ? `Perditeso ${entityLabel.toLowerCase()}n` : `Shto ${entityLabel.toLowerCase()} te ri`}
@@ -232,14 +243,22 @@ export default function PartnerDirectoryPage(props: Props) {
               </button>
             </div>
           </form>
+          ) : (
+            <div style={{ display: "grid", gap: 10 }}>
+              <div style={{ fontSize: 18, fontWeight: 800 }}>Te dhenat jane vetem per lexim</div>
+              <div style={{ color: "var(--muted)", lineHeight: 1.5 }}>
+                Vetem Admin dhe Menaxher mund te shtojne ose ndryshojne {entityLabel.toLowerCase()}.
+              </div>
+            </div>
+          )}
         </SurfaceCard>
       </div>
 
-      {props.importFile ? (
+      {props.importFile && allowEditMasterData ? (
         <SurfaceCard>
           <ImportPanel
             title="Import nga XLSX, XLS ose CSV"
-            hint="Header-at kryesore: code, name, contactPerson, phone, email, address, note, isActive. Kodi dhe emri jane te detyrueshem."
+            hint="Header-at kryesore: code, name, contactPerson, phone, email, address, note, isActive. ID dhe emri jane te detyrueshem."
             importFile={props.importFile}
             onImported={refreshItems}
           />

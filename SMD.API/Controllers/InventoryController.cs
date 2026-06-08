@@ -54,7 +54,7 @@ public class InventoryController : ControllerBase
                 i.Bin.Rack.Zone.Warehouse.Code.ToLower().Contains(s) ||
                 i.Bin.Rack.Zone.Warehouse.Name.ToLower().Contains(s) ||
                 (i.Bin.Rack.Zone.Warehouse.Address != null &&
-                 i.Bin.Rack.Zone.Warehouse.Address.ToLower().Contains(s))
+                 (i.Bin.Rack.Zone.Warehouse.Address ?? "").ToLower().Contains(s))
             );
         }
 
@@ -371,7 +371,7 @@ public class InventoryController : ControllerBase
         });
     }
 
-    // STOCK ALERTS BY PRODUCT
+    // STOCK ALERTS PER PRODUKT
     // GET /api/inventory/stock-alerts?lowStockThreshold=5&top=20
     [HttpGet("stock-alerts")]
     public async Task<IActionResult> StockAlerts([FromQuery] decimal lowStockThreshold = 5, [FromQuery] int top = 20)
@@ -498,7 +498,7 @@ public class InventoryController : ControllerBase
         ws.Cell(row + 3, 2).Value = Math.Truncate(totalMissing);
         ws.Cell(row + 4, 1).Value = "Produkte pa stok";
         ws.Cell(row + 4, 2).Value = result.ProductsOutOfStock;
-        ws.Cell(row + 5, 1).Value = "Produkte nen prag";
+        ws.Cell(row + 5, 1).Value = "Produkte nen prag minimal";
         ws.Cell(row + 5, 2).Value = result.LowStockProducts;
 
         var summaryRange = ws.Range(row + 1, 1, row + 5, 2);
@@ -640,7 +640,7 @@ public class InventoryController : ControllerBase
         });
     }
 
-    // CHARTS
+    // CHART
     // GET /api/inventory/charts?days=30&top=10&lowStockThreshold=5
     [HttpGet("charts")]
     public async Task<IActionResult> Charts([FromQuery] int days = 30, [FromQuery] int top = 10, [FromQuery] decimal lowStockThreshold = 5)
@@ -728,6 +728,7 @@ public class InventoryController : ControllerBase
 
     // 3) Adjustment (rrit/ul QtyOnHand) – për test dhe operacione bazë
     // POST /api/inventory/adjust
+    [Authorize(Policy = "CanMoveStockDirectly")]
     [HttpPost("adjust")]
     public async Task<IActionResult> Adjust([FromBody] InventoryAdjustRequest req)
     {
@@ -763,12 +764,11 @@ public class InventoryController : ControllerBase
         }
 
         var newQty = row.QtyOnHand + req.QtyChange;
-        if (newQty < 0) return BadRequest("QtyOnHand nuk mund të shkojë nën 0.");
+        if (newQty < 0) return BadRequest("Sasia e produktit ne depo nuk mund të shkojë nën 0.");
 
         // nuk lejojmë që reserved të jetë më shumë se onHand
         if (row.QtyReserved > newQty)
-            return BadRequest("QtyReserved është më e madhe se QtyOnHand pas ndryshimit.");
-
+            return BadRequest("Sasia e rezervuar është më e madhe se sasia në depo pas ndryshimit.");
         row.QtyOnHand = newQty;
         row.UpdatedAt = DateTime.UtcNow;
 
@@ -787,10 +787,11 @@ public class InventoryController : ControllerBase
 
     // 4) Reserve (rezervo sasi)
     // POST /api/inventory/reserve
+    [Authorize(Policy = "CanMoveStockDirectly")]
     [HttpPost("reserve")]
     public async Task<IActionResult> Reserve([FromBody] InventoryReserveRequest req)
     {
-        if (req.Qty <= 0) return BadRequest("Qty duhet të jetë > 0.");
+        if (req.Qty <= 0) return BadRequest("Sasia duhet të jetë me e madhe se 0.");
 
         var row = await _db.Inventories
             .FirstOrDefaultAsync(i =>
@@ -800,7 +801,7 @@ public class InventoryController : ControllerBase
                 i.BatchNumber == req.BatchNumber &&
                 i.ExpiryDate == req.ExpiryDate);
 
-        if (row == null) return NotFound("Inventory row not found (shto OnHand fillimisht).");
+        if (row == null) return NotFound("Produkti nuk ekziston ne inventar, duhet ta shtosh kete produkt!");
 
         var available = row.QtyOnHand - row.QtyReserved;
         if (req.Qty > available) return BadRequest("Nuk ka sasi të mjaftueshme për rezervim.");
@@ -815,10 +816,11 @@ public class InventoryController : ControllerBase
 
     // 5) Unreserve (liro rezervimin)
     // POST /api/inventory/unreserve
+    [Authorize(Policy = "CanMoveStockDirectly")]
     [HttpPost("unreserve")]
     public async Task<IActionResult> Unreserve([FromBody] InventoryReserveRequest req)
     {
-        if (req.Qty <= 0) return BadRequest("Qty duhet të jetë > 0.");
+        if (req.Qty <= 0) return BadRequest("Sasia duhet të jetë me e madhe se 0.");
 
         var row = await _db.Inventories
             .FirstOrDefaultAsync(i =>
@@ -828,9 +830,9 @@ public class InventoryController : ControllerBase
                 i.BatchNumber == req.BatchNumber &&
                 i.ExpiryDate == req.ExpiryDate);
 
-        if (row == null) return NotFound("Inventory row not found.");
+        if (row == null) return NotFound("Produkti nuk u gjet ne inventar.");
 
-        if (req.Qty > row.QtyReserved) return BadRequest("Qty është më e madhe se QtyReserved.");
+        if (req.Qty > row.QtyReserved) return BadRequest("Sasia është më e madhe se sasia e rezervuar.");
 
         row.QtyReserved -= req.Qty;
         row.UpdatedAt = DateTime.UtcNow;

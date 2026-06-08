@@ -95,7 +95,7 @@ public class CycleCountsController : ControllerBase
             return BadRequest("Nuk u gjet asnje rresht inventari per numerim.");
 
         if (rows.Count > MaxLinesPerCount)
-            return BadRequest($"Ky numerim ka me shume se {MaxLinesPerCount} rreshta. Zgjidh nje shporte, produkt ose lokacion me te ngushte.");
+            return BadRequest($"Ky numerim ka me shume se {MaxLinesPerCount} rreshta. Zgjidh nje shporte, produkt ose lokacion tjeter.");
 
         var count = new CycleCount
         {
@@ -159,7 +159,7 @@ public class CycleCountsController : ControllerBase
             return NotFound("Numerimi nuk u gjet.");
 
         if (count.Status != CycleCountStatus.Draft)
-            return BadRequest("Mund te ndryshosh vetem numerimet draft.");
+            return BadRequest("Mund te ndryshosh vetem numrimet qe jane draft.");
 
         var line = count.Lines.FirstOrDefault(x => x.Id == lineId);
         if (line is null)

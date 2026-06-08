@@ -14,7 +14,7 @@ namespace SMD.Domain.Entities
         public OutboundPriceTier PriceTier { get; set; } = OutboundPriceTier.Retail;
         public Guid? CustomerId { get; set; }
         public Customer? Customer { get; set; }
-        public string? Reference { get; set; } // SO-456
+        public string? Reference { get; set; }
         public string? Note { get; set; }
         public byte[] RowVersion { get; set; } = Array.Empty<byte>();
         public ICollection<OutboundDocumentLine> Lines { get; set; }

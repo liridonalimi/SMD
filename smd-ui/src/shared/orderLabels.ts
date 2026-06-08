@@ -5,7 +5,7 @@ export function orderStatusLabel(status?: string | null) {
     case "Confirmed":
       return "Konfirmuar";
     case "Fulfilled":
-      return "Kthyer ne dokument";
+      return "Lidhur me dokument";
     case "Cancelled":
       return "Anuluar";
     default:

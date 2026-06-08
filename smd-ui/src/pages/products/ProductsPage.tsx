@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { downloadFile } from "../../services/download";
-import { createProduct, getNextProductBarcode, importProducts, listProducts, productBarcodeLabelsPdfUrl, updateProduct } from "../../services/products";
+import { createProduct, getNextProductBarcode, importProducts, listProducts, productBarcodeLabelsPdfUrl, productQrLabelsPdfUrl, updateProduct } from "../../services/products";
 import { errorMessage } from "../../shared/errors";
 import { ImportPanel } from "../../shared/ImportPanel";
 import { PageIntro } from "../../shared/ui/PageIntro";
 import { SurfaceCard } from "../../shared/ui/SurfaceCard";
+import { canEditMasterData } from "../../shared/permissions";
+import { getSessionUser } from "../../shared/session";
 import type { ProductRecordDto, UpsertProductDto } from "../../types/products";
 
 const inputStyle: React.CSSProperties = {
@@ -63,6 +65,8 @@ function emptyForm(): UpsertProductDto {
 
 export default function ProductsPage() {
   const navigate = useNavigate();
+  const me = getSessionUser();
+  const allowEditMasterData = canEditMasterData(me?.role);
   const pageSize = 10;
   const [items, setItems] = useState<ProductRecordDto[]>([]);
   const [query, setQuery] = useState("");
@@ -73,6 +77,7 @@ export default function ProductsPage() {
   const [saving, setSaving] = useState(false);
   const [generatingBarcode, setGeneratingBarcode] = useState(false);
   const [printingBarcode, setPrintingBarcode] = useState(false);
+  const [printingQr, setPrintingQr] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
@@ -167,9 +172,14 @@ export default function ProductsPage() {
     e.preventDefault();
     setErr(null);
 
+    if (!allowEditMasterData) {
+      setErr("Nuk keni te drejte te ndryshoni katalogun e produkteve.");
+      return;
+    }
+
     const minStockLevel = Number(form.minStockLevel ?? 0);
     if (!Number.isInteger(minStockLevel) || minStockLevel < 0) {
-      setErr("Pragu minimal duhet te jete numer i plote, pa presje ose pike.");
+      setErr("Pragu minimal duhet te jete numer i plote.");
       return;
     }
 
@@ -225,7 +235,7 @@ export default function ProductsPage() {
     }
 
     if (!form.barcode?.trim()) {
-      setErr("Produkti nuk ka barcode. Gjenero ose vendos nje barcode EAN-13 para printimit.");
+      setErr("Produkti nuk ka barcode. Gjenero ose vendos nje barcode te standardit EAN-13 para printimit.");
       return;
     }
 
@@ -240,11 +250,28 @@ export default function ProductsPage() {
     }
   }
 
+  async function printQrLabels() {
+    if (!selectedId) {
+      setErr("Zgjidh nje produkt ekzistues para se te printosh etiketa.");
+      return;
+    }
+
+    setPrintingQr(true);
+    setErr(null);
+    try {
+      await downloadFile(productQrLabelsPdfUrl(selectedId, 18), `qr-${form.sku}.pdf`);
+    } catch (e) {
+      setErr(errorMessage(e));
+    } finally {
+      setPrintingQr(false);
+    }
+  }
+
   return (
     <div style={{ display: "grid", gap: 18 }}>
       <PageIntro
         title="Produktet"
-        subtitle="Menaxho katalogun e produkteve dhe vendos cmimin e blerjes, pakices, shumices dhe VIP ne nje vend."
+              subtitle="Menaxho katalogun e produkteve dhe vendos cmimin e blerjes, cmimin epakices, cmimin e shumices dhe cmimin VIP ne nje vend."
       />
 
       <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr", gap: 18 }}>
@@ -261,7 +288,7 @@ export default function ProductsPage() {
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Kerko produkt sipas SKU, emrit ose barkodit"
+                placeholder="Kerko produkt me SKU, emrer ose barkod"
                 style={inputStyle}
               />
             </div>
@@ -341,6 +368,7 @@ export default function ProductsPage() {
         </SurfaceCard>
 
         <SurfaceCard>
+          {allowEditMasterData ? (
           <form onSubmit={onSubmit} style={{ display: "grid", gap: 12 }}>
             <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
               <div style={{ fontSize: 18, fontWeight: 800 }}>
@@ -382,6 +410,16 @@ export default function ProductsPage() {
                     style={{ ...buttonStyle, marginTop: 8, width: "100%" }}
                   >
                     {printingBarcode ? "Duke pergatitur PDF..." : "Printo etiketa barcode"}
+                  </button>
+                ) : null}
+                {selectedId ? (
+                  <button
+                    type="button"
+                    onClick={printQrLabels}
+                    disabled={printingQr}
+                    style={{ ...buttonStyle, marginTop: 8, width: "100%" }}
+                  >
+                    {printingQr ? "Duke pergatitur PDF..." : "Printo etiketa QR"}
                   </button>
                 ) : null}
               </div>
@@ -453,17 +491,32 @@ export default function ProductsPage() {
               </button>
             </div>
           </form>
+          ) : (
+            <div style={{ display: "grid", gap: 10 }}>
+              <div style={{ fontSize: 18, fontWeight: 800 }}>Katalogu eshte vetem per lexim</div>
+              <div style={{ color: "var(--muted)", lineHeight: 1.5 }}>
+                Vetem Admin dhe Menaxher mund te shtojne ose ndryshojne produkte. Mund te kerkoni produkte dhe te hapni historikun e tyre nga lista.
+              </div>
+              {selectedId ? (
+                <button type="button" onClick={() => navigate(`/products/${selectedId}/history`)} style={buttonStyle}>
+                  Historia e produktit
+                </button>
+              ) : null}
+            </div>
+          )}
         </SurfaceCard>
       </div>
 
+      {allowEditMasterData ? (
       <SurfaceCard>
         <ImportPanel
           title="Import nga XLSX, XLS ose CSV"
-          hint="Header-at kryesore: sku, name, barcode, unit, minStock, purchasePrice, retailPrice, wholesalePrice, vipPrice. SKU dhe name jane te detyrueshme. Kolona barcode duhet te jete Text dhe EAN-13 me 13 shifra, jo format 2.92423E+12."
+          hint="Header-at kryesore: sku, name, barcode, unit, minStock, purchasePrice, retailPrice, wholesalePrice, vipPrice. SKU dhe emri jane te detyrueshme. Kolona barcode duhet te jete e standardit EAN-13 me 13 shifra, jo format 2.92423E+12."
           importFile={importProducts}
           onImported={refreshProducts}
         />
       </SurfaceCard>
+      ) : null}
     </div>
   );
 }

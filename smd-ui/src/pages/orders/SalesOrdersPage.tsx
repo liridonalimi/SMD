@@ -16,6 +16,8 @@ import { errorMessage } from "../../shared/errors";
 import { orderStatusLabel } from "../../shared/orderLabels";
 import { PageIntro } from "../../shared/ui/PageIntro";
 import { SurfaceCard } from "../../shared/ui/SurfaceCard";
+import { canApproveDocuments } from "../../shared/permissions";
+import { getSessionUser } from "../../shared/session";
 import type { InventoryListItemDto } from "../../types/inventory";
 import type { OrderListItem, SalesOrderDetails } from "../../types/orders";
 import type { PartnerLookupDto } from "../../types/partners";
@@ -100,7 +102,7 @@ const statusFilterOptions = [
   { value: "Draft", label: "Draft" },
   { value: "Cancelled", label: "Anuluar" },
   { value: "Confirmed", label: "Konfirmuar" },
-  { value: "Fulfilled", label: "Kthyer ne dokument" },
+  { value: "Fulfilled", label: "Lidhur me dokument" },
 ];
 const orderPageSize = 5;
 
@@ -122,6 +124,8 @@ function toIsoDate(value: string) {
 
 export default function SalesOrdersPage() {
   const nav = useNavigate();
+  const me = getSessionUser();
+  const allowApproveDocuments = canApproveDocuments(me?.role);
   const [orders, setOrders] = useState<OrderListItem[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [details, setDetails] = useState<SalesOrderDetails | null>(null);
@@ -263,7 +267,7 @@ export default function SalesOrdersPage() {
 
   return (
     <div style={{ display: "grid", gap: 18 }}>
-      <PageIntro title="Porosite e shitjes" subtitle="Krijo porosi klienti, rezervo stokun dhe ktheje ne dokument dalje kur porosia dergohet." />
+      <PageIntro title="Porosite e shitjes" subtitle="Nderto porosi per klient, rezervo stokun dhe ktheje ne dokument dalje kur porosia dergohet." />
       {err ? <div style={{ padding: 12, borderRadius: 12, background: "rgba(248,113,113,0.12)", color: "#fecaca" }}>{err}</div> : null}
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1.1fr", gap: 18 }}>
@@ -280,7 +284,7 @@ export default function SalesOrdersPage() {
                   <option key={option.value || "all"} value={option.value}>{option.label}</option>
                 ))}
               </select>
-              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Kerko PS, reference ose klient" style={inputStyle} />
+              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Kerko PS, referenc ose klient" style={inputStyle} />
             </div>
           </div>
           <div
@@ -386,7 +390,7 @@ export default function SalesOrdersPage() {
               onClick={() => {
                 if (!canCreateOrder) {
                   setShowDateRequired(true);
-                  setErr("Ploteso daten para se ta krijosh porosine e shitjes.");
+                  setErr("Ploteso daten para se ta ndertosh porosine e shitjes.");
                   return;
                 }
 
@@ -419,12 +423,12 @@ export default function SalesOrdersPage() {
               <div style={{ color: "var(--muted-strong)", marginTop: 4 }}>{details.customerName ?? "Pa klient"} | {priceTierLabels[details.priceTier] ?? "Cmim"} {details.outboundDocumentId ? "| Ka dalje te krijuar" : ""}</div>
             </div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              {details.status === "Draft" ? <button disabled={busy} style={buttonStyle} onClick={() => run(() => confirmSalesOrder(details.id))}>Konfirmo dhe rezervo</button> : null}
+              {details.status === "Draft" && allowApproveDocuments ? <button disabled={busy} style={buttonStyle} onClick={() => run(() => confirmSalesOrder(details.id))}>Konfirmo dhe rezervo</button> : null}
               {details.status === "Confirmed" ? <button disabled={busy} style={buttonStyle} onClick={() => run(async () => {
                 const doc = await createOutboundFromSalesOrder(details.id);
                 nav(`/outbound/${doc.id}`);
               })}>Krijo dalje</button> : null}
-              {details.status !== "Fulfilled" && details.status !== "Cancelled" ? <button disabled={busy} style={buttonStyle} onClick={() => run(() => cancelSalesOrder(details.id))}>Anulo</button> : null}
+              {details.status !== "Fulfilled" && details.status !== "Cancelled" && allowApproveDocuments ? <button disabled={busy} style={buttonStyle} onClick={() => run(() => cancelSalesOrder(details.id))}>Anulo</button> : null}
             </div>
           </div>
 
@@ -522,7 +526,7 @@ export default function SalesOrdersPage() {
                     }
                     if (!line.quantity || Number(line.quantity) <= 0) {
                       setShowQuantityIssue(true);
-                      setErr("Sasia duhet te jete e vlefshme.");
+                      setErr("Jep sasin si numer te plote, me i madh se 0.");
                       return;
                     }
                     if (selectedInventory) {

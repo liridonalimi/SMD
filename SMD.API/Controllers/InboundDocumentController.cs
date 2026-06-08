@@ -58,7 +58,7 @@ namespace SMD.API.Controllers
             var expiryDate = req.ExpiryDate?.Date;
 
             if (string.IsNullOrWhiteSpace(lotNumber))
-                return BadRequest("Seria eshte e detyrueshme per gjurmimin e produktit.");
+                return BadRequest("Seria e prodhimit eshte e detyrueshme per gjurmimin e produktit.");
 
             if (string.IsNullOrWhiteSpace(batchNumber))
                 return BadRequest("Grupi i prodhimit eshte i detyrueshem per gjurmimin e produktit.");

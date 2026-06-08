@@ -8,6 +8,7 @@ import { errorMessage } from "../../shared/errors";
 import { statusLabel } from "../../shared/documentStatus";
 import { PageIntro } from "../../shared/ui/PageIntro";
 import { SurfaceCard } from "../../shared/ui/SurfaceCard";
+import smdPrintLogo from "../../assets/logo/smd-logo-wordmark-transparent.png";
 
 const PICK_LIST_STORAGE_PREFIX = "smd:pick-list:";
 
@@ -330,7 +331,7 @@ function PickListPrintDocument({
 
       <header className="pick-list-print-header">
         <div>
-          <div className="pick-list-print-brand">SMD</div>
+          <img className="pick-list-print-brand-logo" src={smdPrintLogo} alt="SMD" />
           <h1>Lista e Pergatitjes</h1>
           <div className="pick-list-print-subtitle">Dokumenti dales • {doc.documentNo}</div>
         </div>

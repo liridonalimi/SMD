@@ -189,6 +189,12 @@ body {
   color: #6b7280;
 }
 
+.warehouse-label.qr-label .warehouse-label-footer {
+  margin-top: 8px;
+  padding-top: 0;
+  border-top: 0;
+}
+
 a {
   color: inherit;
   text-decoration: none;
@@ -383,6 +389,13 @@ p {
     font-size: 9pt;
     font-weight: 700;
     color: #455a64 !important;
+  }
+
+  .pick-list-print-brand-logo {
+    display: block;
+    width: 32mm;
+    height: auto;
+    margin-bottom: 1mm;
   }
 
   .pick-list-print h1 {

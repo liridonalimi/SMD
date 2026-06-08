@@ -1165,7 +1165,12 @@ namespace SMD.Infrastructure.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Address")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<string>("City")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Code")
                         .IsRequired()
@@ -1175,8 +1180,20 @@ namespace SMD.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<TimeSpan?>("CutoffTime")
+                        .HasColumnType("time");
+
+                    b.Property<int?>("DailyOrderCapacity")
+                        .HasColumnType("int");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
+
+                    b.Property<decimal?>("Latitude")
+                        .HasColumnType("decimal(9,6)");
+
+                    b.Property<decimal?>("Longitude")
+                        .HasColumnType("decimal(9,6)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -1192,6 +1209,80 @@ namespace SMD.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("Warehouses");
+                });
+
+            modelBuilder.Entity("SMD.Domain.Entities.WarehouseTask", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("AssignedToUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("FromBinId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid?>("ProductId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal?>("Quantity")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Reference")
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<DateTime?>("StartedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TaskNo")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<Guid?>("ToBinId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssignedToUserId");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("FromBinId");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("TaskNo")
+                        .IsUnique();
+
+                    b.HasIndex("ToBinId");
+
+                    b.HasIndex("Type");
+
+                    b.ToTable("WarehouseTasks", (string)null);
                 });
 
             modelBuilder.Entity("SMD.Domain.Entities.Zone", b =>
@@ -1551,6 +1642,37 @@ namespace SMD.Infrastructure.Migrations
                         .WithMany()
                         .HasForeignKey("ToBinId")
                         .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("FromBin");
+
+                    b.Navigation("Product");
+
+                    b.Navigation("ToBin");
+                });
+
+            modelBuilder.Entity("SMD.Domain.Entities.WarehouseTask", b =>
+                {
+                    b.HasOne("SMD.Domain.Entities.User", "AssignedToUser")
+                        .WithMany()
+                        .HasForeignKey("AssignedToUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("SMD.Domain.Entities.Bin", "FromBin")
+                        .WithMany()
+                        .HasForeignKey("FromBinId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("SMD.Domain.Entities.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("SMD.Domain.Entities.Bin", "ToBin")
+                        .WithMany()
+                        .HasForeignKey("ToBinId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("AssignedToUser");
 
                     b.Navigation("FromBin");
 

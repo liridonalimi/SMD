@@ -24,6 +24,6 @@ export async function login(req: LoginRequest, signal?: AbortSignal): Promise<Lo
     }
 
     const data = (await res.json()) as LoginResponse;
-    setToken(data.token); //  ruaje tokenin këtu
+    setToken(data.token); //  tokeni ruhet ketu
     return data;
 }

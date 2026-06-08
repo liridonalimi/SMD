@@ -25,5 +25,5 @@ export function toStatus(v: unknown): DocumentStatus | undefined {
 
 export function statusLabel(raw: unknown) {
     const s = toStatus(raw);
-    return s === undefined ? "I panjohur" : DocumentStatusLabels[s];
+    return s === undefined ? "i panjohur" : DocumentStatusLabels[s];
 }

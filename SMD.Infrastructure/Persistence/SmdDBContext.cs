@@ -40,6 +40,7 @@ namespace SMD.Infrastructure.Persistence
         public DbSet<SalesOrderLine> SalesOrderLines => Set<SalesOrderLine>();
         public DbSet<ReturnDocument> ReturnDocuments => Set<ReturnDocument>();
         public DbSet<ReturnDocumentLine> ReturnDocumentLines => Set<ReturnDocumentLine>();
+        public DbSet<WarehouseTask> WarehouseTasks => Set<WarehouseTask>();
         public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -77,6 +78,10 @@ namespace SMD.Infrastructure.Persistence
             {
                 entity.Property(w => w.Code).IsRequired().HasMaxLength(50);
                 entity.Property(w => w.Name).IsRequired().HasMaxLength(150);
+                entity.Property(w => w.Address).HasMaxLength(250);
+                entity.Property(w => w.City).HasMaxLength(100);
+                entity.Property(w => w.Latitude).HasColumnType("decimal(9,6)");
+                entity.Property(w => w.Longitude).HasColumnType("decimal(9,6)");
 
                 entity.HasIndex(w => w.Code).IsUnique();
             });
@@ -351,7 +356,7 @@ namespace SMD.Infrastructure.Persistence
                     .HasColumnType("decimal(18,2)")
                     .HasDefaultValue(0m);
 
-                // FK -> Product (mos lejo delete të produktit nëse përdoret në dokument)
+                // FK -> Product (mos lejo te fshihet produkti nëse përdoret në dokument)
                 entity.HasOne(x => x.Product)
                     .WithMany()
                     .HasForeignKey(x => x.ProductId)
@@ -363,7 +368,7 @@ namespace SMD.Infrastructure.Persistence
                     .HasForeignKey(x => x.ToBinId)
                     .OnDelete(DeleteBehavior.Restrict);
 
-                // Performance indexe (shumë të dobishme)
+                // Performanca e indexeve (shumë të dobishme)
                 entity.HasIndex(x => x.InboundDocumentId);
                 entity.HasIndex(x => x.ProductId);
                 entity.HasIndex(x => x.ToBinId);
@@ -603,6 +608,45 @@ namespace SMD.Infrastructure.Persistence
                 entity.HasIndex(x => x.ReturnDocumentId);
                 entity.HasIndex(x => x.ProductId);
                 entity.HasIndex(x => x.BinId);
+            });
+
+            modelBuilder.Entity<WarehouseTask>(entity =>
+            {
+                entity.ToTable("WarehouseTasks");
+                entity.HasKey(x => x.Id);
+                entity.Property(x => x.TaskNo).IsRequired().HasMaxLength(40);
+                entity.Property(x => x.Type).IsRequired().HasConversion<int>();
+                entity.Property(x => x.Status).IsRequired().HasConversion<int>();
+                entity.Property(x => x.Quantity).HasColumnType("decimal(18,2)");
+                entity.Property(x => x.Reference).HasMaxLength(80);
+                entity.Property(x => x.Note).HasMaxLength(500);
+
+                entity.HasIndex(x => x.TaskNo).IsUnique();
+                entity.HasIndex(x => x.Status);
+                entity.HasIndex(x => x.Type);
+                entity.HasIndex(x => x.CreatedAt);
+                entity.HasIndex(x => x.AssignedToUserId);
+                entity.HasIndex(x => x.ProductId);
+
+                entity.HasOne(x => x.Product)
+                    .WithMany()
+                    .HasForeignKey(x => x.ProductId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(x => x.FromBin)
+                    .WithMany()
+                    .HasForeignKey(x => x.FromBinId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(x => x.ToBin)
+                    .WithMany()
+                    .HasForeignKey(x => x.ToBinId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(x => x.AssignedToUser)
+                    .WithMany()
+                    .HasForeignKey(x => x.AssignedToUserId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             // Tabela për Audit Logs

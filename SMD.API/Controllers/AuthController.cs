@@ -1,101 +1,4 @@
-﻿/*
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using SMD.Application.DTOs.Auth;
-using SMD.Infrastructure.Persistence;
-using SMD.Infrastructure.Security;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
-
-namespace SMD.API.Controllers;
-
-[ApiController]
-[Route("api/auth")]
-public class AuthController : ControllerBase
-{
-    private readonly SmdDbContext _context;
-    private readonly IConfiguration _configuration;
-
-    public AuthController(SmdDbContext context, IConfiguration configuration)
-    {
-        _context = context;
-        _configuration = configuration;
-    }
-
-    [HttpPost("login")]
-    public IActionResult Login([FromBody] LoginRequestDto request)
-    {
-        // 1️ Gjej user nga DB
-        var user = _context.Users.SingleOrDefault(x => x.Email == request.Email);
-
-        if (user == null)
-            return Unauthorized("Ky përdorues nuk ekziston! Ju lutem përdoreni një përdorues të vlefshëm.");
-
-        // 2️ Verifiko password
-        if (!PasswordHasher.Verify(request.Password, user.PasswordHash))
-            return Unauthorized("Fjalkalimi është i gabuar! Ju lutem shkruani fjalkalimin e saktë.");
-
-        // 3️ Krijo JWT
-        var token = GenerateJwtToken(user);
-
-        return Ok(new { token });
-    }
-
-    [HttpPost("register")]
-    public IActionResult Register(RegisterRequestDto request)
-    {
-        var exists = _context.Users.Any(x => x.Email == request.Email);
-        if (exists)
-            return BadRequest("Ky përdorues tashmë ekzsiton! Ju lutem ndërtoni përdorues të veçantë duke shtuar ndonjë shkronjë, numër, simbol.");
-
-        var user = new Domain.Entities.User
-        {
-            Id = Guid.NewGuid(),
-            Username = request.Username,
-            Email = request.Email,
-            PasswordHash = PasswordHasher.Hash(request.Password), // password hashing
-            Role = Domain.Enums.UserRole.Worker,
-            CreatedAt = DateTime.UtcNow,
-            IsActive = true
-        };
-
-        _context.Users.Add(user);
-        _context.SaveChanges();
-
-        return Ok("Përdoruesi u regjistrua me sukses.");
-    }
-
-    private string GenerateJwtToken(Domain.Entities.User user)
-    {
-        var jwt = _configuration.GetSection("Jwt");
-
-        var claims = new List<Claim>
-        {
-            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new Claim(ClaimTypes.Email, user.Email),
-            new Claim(ClaimTypes.Role, user.Role.ToString())
-        };
-
-        var key = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(jwt["Key"]!)
-        );
-
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-        var token = new JwtSecurityToken(
-            issuer: jwt["Issuer"],
-            audience: jwt["Audience"],
-            claims: claims,
-            expires: DateTime.UtcNow.AddHours(2),
-            signingCredentials: creds
-        );
-
-        return new JwtSecurityTokenHandler().WriteToken(token);
-    }
-}
-*/
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using SMD.Application.DTOs.Auth;
@@ -132,7 +35,7 @@ public class AuthController : ControllerBase
             return Unauthorized("Ky përdorues nuk ekziston!");
 
         if (!user.IsActive)
-            return Unauthorized("Ky përdorues është jo-aktiv!");
+            return Unauthorized("Ky përdorues është joaktiv!");
 
         if (!PasswordHasher.Verify(password, user.PasswordHash))
             return Unauthorized("Fjalkalimi është i gabuar!");

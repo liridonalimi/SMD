@@ -154,7 +154,7 @@ public class StockMovementsController : ControllerBase
 
         // verifikime
         if (!await _db.Products.AnyAsync(p => p.Id == req.ProductId)) return NotFound("Produkti nuk u gjet.");
-        if (!await _db.Bins.AnyAsync(b => b.Id == req.ToBinId)) return NotFound("Shporta ku duhet të dërgohet produkti nuk u gjet.");
+        if (!await _db.Bins.AnyAsync(b => b.Id == req.ToBinId)) return NotFound("Shporta ku duhet të vendoset produkti nuk u gjet.");
 
         await using var tx = await _db.Database.BeginTransactionAsync();
 
@@ -194,17 +194,17 @@ public class StockMovementsController : ControllerBase
         var userId = GetUserIdOrNull();
 
         if (!await _db.Products.AnyAsync(p => p.Id == req.ProductId)) return NotFound("Produkti nuk u gjet.");
-        if (!await _db.Bins.AnyAsync(b => b.Id == req.FromBinId)) return NotFound("Shporta nga e cila duhet të dërgohet produkti nuk u gjet.");
+        if (!await _db.Bins.AnyAsync(b => b.Id == req.FromBinId)) return NotFound("Shporta nga e cila duhet të vendoest produkti nuk u gjet.");
 
         await using var tx = await _db.Database.BeginTransactionAsync();
 
         var inv = await _db.Inventories
             .FirstOrDefaultAsync(i => i.BinId == req.FromBinId && i.ProductId == req.ProductId);
 
-        if (inv == null) return NotFound("Rreshti i Inventarit nuk u gjet.");
+        if (inv == null) return NotFound("Produkti nuk u gjet brenda ne inventar.");
         var newOnHand = inv.QtyOnHand - req.Quantity;
         if (newOnHand < 0) return BadRequest("Sasia e disponueshme nuk mund të shkojë nën 0.");
-        if (inv.QtyReserved > newOnHand) return BadRequest("Sasia e rezervuar do bëhej më e madhe se sasia e disponueshme.");
+        if (inv.QtyReserved > newOnHand) return BadRequest("Sasia e rezervuar do bëhej më e madhe se sasia e disponueshme!");
 
         inv.QtyOnHand = newOnHand;
         inv.UpdatedAt = DateTime.UtcNow;
@@ -235,13 +235,13 @@ public class StockMovementsController : ControllerBase
     {
         if (req.Quantity <= 0) return BadRequest("Sasia duhet te jete me e madhe se 0.");
         if (!IsWholeNumber(req.Quantity)) return BadRequest("Sasia duhet te jete numer i plote.");
-        if (req.FromBinId == req.ToBinId) return BadRequest("Shporta nga e cila dërgohet dhe shporta tek e cila dërgohet malli nuk mund të jenë njësoj.");
+        if (req.FromBinId == req.ToBinId) return BadRequest("Shporta nga e cila merret dhe shporta tek e cila vendoset produkti nuk mund të jenë njësoj.");
 
         var userId = GetUserIdOrNull();
 
         if (!await _db.Products.AnyAsync(p => p.Id == req.ProductId)) return NotFound("Produkti nuk u gjet.");
-        if (!await _db.Bins.AnyAsync(b => b.Id == req.FromBinId)) return NotFound("Shporta nga e cila duhet të dërgohet produkti nuk u gjet.");
-        if (!await _db.Bins.AnyAsync(b => b.Id == req.ToBinId)) return NotFound("Shporta ku duhet të dërgohet produkti nuk u gjet.");
+        if (!await _db.Bins.AnyAsync(b => b.Id == req.FromBinId)) return NotFound("Shporta nga e cila duhet të merret produkti nuk u gjet.");
+        if (!await _db.Bins.AnyAsync(b => b.Id == req.ToBinId)) return NotFound("Shporta ku duhet të vendoset produkti nuk u gjet.");
 
         await using var tx = await _db.Database.BeginTransactionAsync();
 
@@ -249,11 +249,11 @@ public class StockMovementsController : ControllerBase
         var from = await _db.Inventories
             .FirstOrDefaultAsync(i => i.BinId == req.FromBinId && i.ProductId == req.ProductId);
 
-        if (from == null) return NotFound("Rreshti i Inventarit nuk u gjet.");
+        if (from == null) return NotFound("Produkti nuk u gjet brenda ne inventar.");
 
         var newFromOnHand = from.QtyOnHand - req.Quantity;
-        if (newFromOnHand < 0) return BadRequest("Sasia (From) nuk mund të shkojë nën 0.");
-        if (from.QtyReserved > newFromOnHand) return BadRequest("Sasia e rezervuar (From) do bëhej më e madhe se sasia e disponueshme pas transferit.");
+        if (newFromOnHand < 0) return BadRequest("Sasia e disponueshme nuk mund të shkojë nën 0.");
+        if (from.QtyReserved > newFromOnHand) return BadRequest("Sasia e rezervuar aktuale do bëhej më e madhe se sasia e disponueshme pas ndryshimit.");
 
         from.QtyOnHand = newFromOnHand;
         from.UpdatedAt = DateTime.UtcNow;
@@ -303,7 +303,7 @@ public class StockMovementsController : ControllerBase
 
         var newOnHand = inv.QtyOnHand + req.QuantityChange;
         if (newOnHand < 0) return BadRequest("Sasia e disponueshme nuk mund të shkojë nën 0.");
-        if (inv.QtyReserved > newOnHand) return BadRequest("Sasia e rezervuar do bëhej më e madhe se Sasia e disponueshme pas ndryshimit.");
+        if (inv.QtyReserved > newOnHand) return BadRequest("Sasia e rezervuar aktuale do bëhej më e madhe se sasia e disponueshme pas ndryshimit.");
 
         inv.QtyOnHand = newOnHand;
         inv.UpdatedAt = DateTime.UtcNow;

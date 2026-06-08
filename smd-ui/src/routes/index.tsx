@@ -1,5 +1,4 @@
-﻿// new tab, clickable list versions
-import { createBrowserRouter } from "react-router-dom";
+﻿import { createBrowserRouter } from "react-router-dom";
 import AppLayout from "../app/shell/AppLayout";
 import RequireAuth from "../app/shell/RequireAuth";
 import RequireRole from "./RequireRole";
@@ -8,7 +7,6 @@ import LoginPage from "../pages/auth/LoginPage";
 import DashboardPage from "../pages/dashboard/DashboardPage";
 import DocumentCreatePage from "../pages/documents/DocumentCreatePage";
 
-//import InboundPage from "../pages/inbound/InboundPage";
 import InboundList from "../pages/inbound/InboundList";
 import InboundDetails from "../pages/inbound/InboundDetails";
 
@@ -28,8 +26,12 @@ import ProductHistoryPage from "../pages/products/ProductHistoryPage";
 import PartnerFinancePage from "../pages/finance/PartnerFinancePage";
 import PurchaseOrdersPage from "../pages/orders/PurchaseOrdersPage";
 import SalesOrdersPage from "../pages/orders/SalesOrdersPage";
+import WarehouseTasksPage from "../pages/warehouseTasks/WarehouseTasksPage";
+import WarehouseNetworkPage from "../pages/warehouseNetwork/WarehouseNetworkPage";
+import CT40ScanPage from "../pages/ct40/CT40ScanPage";
 
 import AuditLogsPage from "../pages/audit/AuditLogsPage";
+import AdminUsersPage from "../pages/admin/AdminUsersPage";
 import CustomersPage from "../pages/partners/CustomersPage";
 import SuppliersPage from "../pages/partners/SuppliersPage";
 
@@ -58,6 +60,9 @@ export const router = createBrowserRouter([
           { path: "/returns", element: <ReturnsList /> },
           { path: "/purchase-orders", element: <PurchaseOrdersPage /> },
           { path: "/sales-orders", element: <SalesOrdersPage /> },
+          { path: "/warehouse-tasks", element: <WarehouseTasksPage /> },
+          { path: "/warehouse-network", element: <WarehouseNetworkPage /> },
+          { path: "/ct40-scan", element: <CT40ScanPage /> },
           { path: "/returns/:id", element: <ReturnDetails /> },
           { path: "/labels", element: <LabelsPage /> },
           { path: "/stock-movements", element: <StockMovementsPage /> },
@@ -66,9 +71,8 @@ export const router = createBrowserRouter([
           { path: "/customers", element: <CustomersPage /> },
           { path: "/suppliers", element: <SuppliersPage /> },
           { path: "/finance", element: <PartnerFinancePage /> },
-          /*new*/
-            //{ path: "/audit-logs", element: <AuditLogsPage /> },
-          { path: "/audit-logs", element: ( <RequireRole roles={[0, 3]}> <AuditLogsPage /> </RequireRole>), },
+          { path: "/audit-logs", element: ( <RequireRole roles={[0]}> <AuditLogsPage /> </RequireRole>), },
+          { path: "/admin/users", element: (<RequireRole roles={[0]}><AdminUsersPage /></RequireRole>) },
 
         ],
       },

@@ -13,6 +13,7 @@ using SMD.Application.Services.Exports;
 using SMD.Infrastructure.Services.Exports;
 using SMD.Application.Services;
 using SMD.Infrastructure.Services.Dashboard;
+using SMD.Infrastructure.Services.WarehouseTasks;
 
 
 // Add services to the container.
@@ -23,26 +24,6 @@ builder.Services.AddDbContext<SmdDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
     .EnableSensitiveDataLogging()
     .LogTo(Console.WriteLine, LogLevel.Information));
-
-/*
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        // added new, ne production kjo duhet te jet true
-        options.RequireHttpsMetadata = false;
-        options.SaveToken = true;
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtSettings["Issuer"],
-            ValidAudience = jwtSettings["Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]!))
-        };
-    });
-*/
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -146,6 +127,7 @@ builder.Services.AddScoped<IDashboardService, DashboardService>();
 // document services interface
 builder.Services.AddScoped<IDocumentNumberService, DocumentNumberService>();
 builder.Services.AddScoped<IDocumentService, DocumentService>();
+builder.Services.AddScoped<ReplenishmentTaskService>();
 
 // EXPORT
 builder.Services.AddScoped<IExportService, ExportService>();

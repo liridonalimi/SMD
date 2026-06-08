@@ -10,11 +10,11 @@ public class StockMovement : BaseEntity
     public Guid ProductId { get; set; }
     public Product Product { get; set; } = null!;
 
-    // FROM (opsionale për IN)
+    // Nga (opsionale për IN)
     public Guid? FromBinId { get; set; }
     public Bin? FromBin { get; set; }
 
-    // TO (opsionale për OUT)
+    // tek (opsionale për OUT)
     public Guid? ToBinId { get; set; }
     public Bin? ToBin { get; set; }
 
